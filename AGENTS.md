@@ -1,0 +1,120 @@
+# AGENTS.md
+
+本文件是 **Mhydps-Plugin 的仓库结构约束落地副本**，权威定义在用户级 skill `plugin-repo-layout`；两者冲突时以 skill 为准，并回写本文件。
+
+## 一、插件定位
+
+TRSS-Yunzai v3 插件，只做一件事：把 [mhydps.cn](https://www.mhydps.cn/) 的只读数据搬进群聊。
+
+- 数据来源是**非官方接口**，站点改版即可能失效；所有请求集中在 `model/MhydpsClient.js`，字段解读集中在 `model/` 与 `modules/`，便于站点变动时定点修改。
+- 本插件**不投稿、不投票、不写站点数据**，只有 GET。
+
+## 二、目录结构
+
+```
+Mhydps-Plugin/
+├── index.js                 入口：初始化配置 → 载入磁盘缓存 → 动态加载 apps/
+├── package.json  .gitignore  .gitattributes  AGENTS.md  README.md  LICENSE
+├── apps/                    功能入口，每个文件导出 class extends plugin
+├── model/                   数据层：自己发 HTTP 或读写数据，不 import modules/
+├── modules/                 业务层：编排、筛选、组装视图，可 import model/ 与 components/
+├── components/              可复用组件：配置、常量、版本号、渲染
+├── config/                  运行时配置（不入库）+ config.yaml.example（入库）
+├── defSet/config.yaml       锅巴模板（${变量} 占位符 + 注释）
+├── guoba.support.js  guoba/ 锅巴 Web 配置
+├── resources/               dps/*.html、common/*.css、help/help-cfg.js、data/*.json
+└── test/                    回归套件（不启动 bot）
+```
+
+不设 `lib/`、不设 `tool/`（没有外部可执行文件）、不建空目录。
+
+### 文件该放哪（四步石蕊测试）
+
+| # | 问 | `model/` | `modules/` |
+|---|----|----------|------------|
+| 1 | import 了什么？ | 只 import node 内置、常量、配置 | import 了 `../model/` 或 `../components/` |
+| 2 | 一句话怎么描述？ | 「调 X 接口返回 Y」 | 「先…再…」 |
+| 3 | 谁发 HTTP？ | 自己发 | 自己不发，调 model/ |
+| 4 | 有可变状态吗？ | 最多缓存/超时 | 管理锁、跨操作状态 |
+
+## 三、分层实况（本仓库当前映射）
+
+| 文件 | 层 | 一句话 |
+|------|----|--------|
+| `model/MhydpsClient.js` | model | 发 HTTP：拼 Referer、可走代理、带超时 |
+| `model/TeamStore.js` | model | 拉 `/api/teams`、`/api/teams2`，落盘 `data/` + 内存缓存 + TTL |
+| `model/CharacterIndex.js` | model | 读随包角色表/首领表，提供角色与首领检索 |
+| `model/EnkaClient.js` | model | 调站点 Enka 代理取练度数据、翻译错误 |
+| `model/AvatarStore.js` | model | 立绘下载与缓存 |
+| `model/startup.js` | model | 启动编排（只载入磁盘缓存，不发网络） |
+| `modules/queryArgs.js` | modules | 命令参数解析（显式键值 + 位置简写） |
+| `modules/rankQuery.js` / `raidQuery.js` | modules | 榜单筛选、排序、分页、组装视图行 |
+| `modules/buildQuery.js` | modules | Enka 原始数据 → 面板/武器/圣遗物视图 |
+| `modules/teamView.js` | modules | 榜单行共用视图（成员头像/命座、金数、标签） |
+| `modules/formatText.js` | modules | 渲染失败时的纯文本回退 |
+| `modules/respond.js` | modules | 出图 + 失败回退的统一回复 |
+
+## 四、约定
+
+### 入口与命令
+
+- 单入口模式：`index.js` 负责 `readdir` + `Promise.allSettled` 动态加载 `apps/` 下所有 `.js`。
+- 每个 `apps/*.js` 只导出**一个** class；类名 PascalCase，`name` / `dsc` 用简体中文。
+- 所有命令以 `#DPS…` 命名空间开头（`#DPS榜` / `#DPS危战榜` / `#DPS练度查询` / `#DPS状态` / `#DPS帮助` / `#DPS更新`），避免与 miao-plugin（`#面板`）、Atlas-Plugin（`^#(.+)$`）抢词。
+- **改动命令正则 / 触发词 / 权限等级属对群友可见的改动，必须先与维护者确认。**
+- `priority` 默认 8000（低于 Atlas 的 10000），改动此值前先确认不会被别的插件吃掉。
+
+### 配置三层
+
+```
+defSet/config.yaml          ← 模板（${mhydps_*} 占位符 + 注释）
+  ↓ 锅巴保存
+guoba/index.js              ← 读模板 → 替换变量 → 写 config/config.yaml
+config/config.yaml          ← 运行时（不入库）
+config/config.yaml.example  ← 参考默认值（入库，首次启动自动复制）
+```
+
+- 锅巴 field 用点分隔路径，模板变量用下划线（`cacheTtlMinutes` → `${mhydps_cacheTtlMinutes}`）。
+- 禁止用 `YAML.stringify` 整写配置（会抹掉注释），一律模板替换。
+- 改配置键时**同一轮**同步：`defSet/config.yaml`、`config/config.yaml.example`、`guoba/index.js` 的 `TEMPLATE_VARS` 与 `DEFAULTS`、`components/config.js` 的 `defaultConfig`。
+
+### 网络与数据
+
+- 站点请求必须带 `Referer: https://www.mhydps.cn/`（否则 nginx 403），统一走 `model/MhydpsClient.js`。
+- 代理只从配置 `proxy` 取，不读环境变量、不写死地址。
+- 任何网络失败都要能降级：查询走本地缓存并提示数据时间；渲染失败回退文本（`modules/respond.js`）。
+- 缓存与立绘写 `<插件根>/data/`（gitignore）；不往仓库外写文件。
+
+### 渲染
+
+- 模板在 `resources/dps/*.html`，art-template 语法；`{{_res_path}}` / `{{_data_path}}` / `{{renderScale}}` / `{{copyright}}` 由 `components/render.js` 注入。
+- 模板内不写 `<script>`，不引用外部字体（仓库不携带字体文件）。
+- `components/render.js` 的 `RES_PREFIX` 层级依赖框架把 HTML 写到 `temp/html/<插件名>/<APP>/<tpl>/`，改动模板命名前先读该文件注释。
+
+### 日志与注释
+
+- 日志只用 `logger?.info` / `logger?.warn` / `logger?.error`。
+- 注释写「现在是什么、为什么这样设计、边界在哪」，不写单次 bug 修复过程与历史沿革。
+- 版本号统一从 `components/pluginVersion.js` 取，页脚文案 `COPYRIGHT` 在 `components/constants.js`。
+
+## 五、测试
+
+- 结构：`test/_helper.mjs`（路径/前置/断言/框架桩）+ `test/run.mjs`（运行器）+ `test/fixtures/`（离线样例）+ `<主题>.test.mjs`。
+- `pnpm test` = `node test/run.mjs`，**任意 cwd 可跑**，不启动 bot、不发真实网络请求（真实接口只由人工验证）。
+- **缺前置一律打印「跳过」并 `exit 0`**（例如没有浏览器时不跑渲染类套件）。
+- 临时产物写 `test/.test-tmp/`（gitignore）；套件不得改动仓库里的源数据。
+- 只测对外行为与契约，不 import 生产代码的私有函数。
+
+## 六、Git
+
+- **不执行任何 git 操作**（`add` / `commit` / `push` / `merge` / `rebase` 等），由维护者执行。
+- 改动完成后给提交摘要：单行标题 `prefix: 中文描述`（`feat:` / `fix:` / `refactor:` / `chore:` / `docs:`），详细列表每行 `- ` 一项。
+- 工作树里做的改动，完成后必须复制回主干目录再提交。
+
+## 七、需先确认才能做的事
+
+- 改命令正则 / 触发词 / 权限等级 / 对群友可见的行为
+- 改 `priority` 默认值
+- 新增依赖
+- 大面积移动、重命名、删除文件
+- 修改本文件

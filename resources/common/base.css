@@ -1,0 +1,40 @@
+/* Mhydps-Plugin 基础样式 — 深色科技风主题（配色对齐 mhydps.cn） */
+
+/* ===== 全局重置：清掉默认内外边距，统一盒模型 ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== 页面基础：深色底 + 顶部冷光晕，宽度随内容自适应 ===== */
+body {
+  font-family: 'MiSans', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  font-size: 20px;
+  line-height: 1.55;
+  color: #e8e8f2;
+  background-color: #12121a;
+  background-image:
+    radial-gradient(900px 320px at 6% -8%, rgba(74, 158, 255, 0.13), transparent 70%),
+    radial-gradient(900px 320px at 94% -8%, rgba(168, 85, 247, 0.10), transparent 70%);
+  /* 宽度自适应内容：只给上下限，不写死 1920px 之类的固定宽度 */
+  width: fit-content;
+  min-width: 780px;
+  max-width: 1400px;
+  padding: 14px 18px 18px;
+}
+
+/* ===== 图片默认无边框（头像/图标样式由组件类控制） ===== */
+img {
+  border: 0;
+}
+
+/* ===== 弱化文本 .dim：次级说明文字统一使用 ===== */
+.dim {
+  color: #9a9ab4;
+}
+
+/* ===== 等宽数字 .num：榜单/面板数值对齐更整齐 ===== */
+.num {
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,151 @@
+/**
+ * rankQuery — DPS 数据库榜单查询
+ *
+ * 数据口径（来自站点 /api/teams 全量记录）：
+ *   damage        期望 DPS（站点按此降序收录，前端「DPS数据库」页同口径）
+ *   cost          总金数 = limitcost + normalcost（实测 1394/1394 成立）
+ *   members       配队四人（含各自命座），第一位是主 C（前端「只搜主C」即按此判定）
+ *   clean / lvl   绿玩（无宏/无连点）/ 全员满级
+ * 本模块只做筛选、排序、分页与视图组装；取数与缓存新鲜度交给 TeamStore。
+ */
+import { getSnapshot, ensureFresh, cacheInfo } from '../model/TeamStore.js'
+import { findCharacter, searchCharacters, memberIs } from '../model/CharacterIndex.js'
+import { ensureAvatars } from '../model/AvatarStore.js'
+import { getPageSize, getPluginConfig } from '../components/config.js'
+import { damageText, MAX_PAGE_SIZE } from '../components/constants.js'
+import { memberViews, avatarIdsOf, tagViews } from './teamView.js'
+
+/** 排序口径：damage = 期望 DPS 降序（默认），costAsc/costDesc = 按总金数 */
+export const RANK_SORTS = {
+  damage: (a, b) => b.damage - a.damage || a.cost - b.cost,
+  costAsc: (a, b) => a.cost - b.cost || b.damage - a.damage,
+  costDesc: (a, b) => b.cost - a.cost || b.damage - a.damage
+}
+
+/**
+ * 按条件筛选配队
+ * @param {object[]} teams - 归一化后的记录
+ * @param {object} [q]
+ * @param {object} [q.character] - CharacterIndex 角色记录（内部会把成员名比对上别名）
+ * @param {number} [q.costMin]
+ * @param {number} [q.costMax]
+ * @param {string} [q.tag] - 标签包含匹配（不区分大小写），支持空格分隔的多个标签（全部命中）
+ * @param {boolean} [q.cleanOnly] - 只看绿玩
+ * @param {boolean} [q.mainOnly] - 只匹配主 C（阵容第一位）
+ * @returns {object[]}
+ */
+export function filterTeams (teams, q = {}) {
+  const tags = String(q.tag || '').split(/\s+/).filter(Boolean).map(s => s.toLowerCase())
+
+  return (teams || []).filter(team => {
+    if (q.character) {
+      const members = q.mainOnly ? (team.members || []).slice(0, 1) : (team.members || [])
+      if (!members.some(m => memberIs(m.charId, q.character))) return false
+    }
+    if (q.cleanOnly && !team.clean) return false
+    if (Number.isFinite(q.costMin) && team.cost < q.costMin) return false
+    if (Number.isFinite(q.costMax) && team.cost > q.costMax) return false
+    if (tags.length) {
+      const own = (team.tags || []).map(t => t.toLowerCase())
+      if (!tags.every(t => own.some(o => o.includes(t)))) return false
+    }
+    return true
+  })
+}
+
+/**
+ * 排序（不改原数组）
+ * @param {object[]} teams
+ * @param {string} sort - RANK_SORTS 的键
+ * @returns {object[]}
+ */
+export function sortTeams (teams, sort = 'damage') {
+  const cmp = RANK_SORTS[sort] || RANK_SORTS.damage
+  return [...(teams || [])].sort(cmp)
+}
+
+/** 组装单行的视图数据（名次从 startRank 连续编号） */
+export function buildRows (teams, startRank = 1) {
+  return (teams || []).map((team, i) => ({
+    rank: startRank + i,
+    damage: team.damage,
+    damageText: damageText(team.damage),
+    cost: team.cost,
+    limitcost: team.limitcost,
+    normalcost: team.normalcost,
+    tags: tagViews(team),
+    clean: team.clean,
+    lvl: team.lvl,
+    video: team.video,
+    chars: memberViews(team.members)
+  }))
+}
+
+/** 查询摘要（页脚与副标题用） */
+function describe (q, character) {
+  const parts = []
+  if (character) parts.push(`${character.name}${q.mainOnly ? '（主C）' : ''}`)
+  if (Number.isFinite(q.costMin) && Number.isFinite(q.costMax)) parts.push(`${q.costMin}~${q.costMax}金`)
+  else if (Number.isFinite(q.costMax)) parts.push(`≤${q.costMax}金`)
+  else if (Number.isFinite(q.costMin)) parts.push(`≥${q.costMin}金`)
+  if (q.tag) parts.push(`标签「${q.tag}」`)
+  if (q.cleanOnly) parts.push('仅绿玩')
+  if (q.sort === 'costAsc') parts.push('按金数升序')
+  else if (q.sort === 'costDesc') parts.push('按金数降序')
+  else parts.push('按期望DPS降序')
+  return parts.join(' · ')
+}
+
+/**
+ * 查询 DPS 榜
+ * @param {object} q - 解析后的查询参数（见 modules/queryArgs.js）
+ * @param {object} [opts] - { proxy, timeoutMs, sort }
+ * @returns {Promise<object>} 成功 { ok: true, total, page, totalPages, rows, ... }，
+ *                            角色没找到 { ok: false, error, suggestions }
+ */
+export async function queryRank (q = {}, opts = {}) {
+  const character = q.char ? findCharacter(q.char) : null
+  if (q.char && !character) {
+    return {
+      ok: false,
+      error: `没有找到角色「${q.char}」`,
+      suggestions: searchCharacters(q.char, 6).map(c => c.name)
+    }
+  }
+
+  const fresh = await ensureFresh(opts)
+  const { teams } = getSnapshot()
+
+  const filtered = filterTeams(teams, { ...q, character })
+  const sorted = sortTeams(filtered, opts.sort || q.sort || 'damage')
+
+  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(opts.pageSize || getPageSize())))
+  const total = sorted.length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const page = Math.min(Math.max(1, Number(q.page) || 1), totalPages)
+  const start = (page - 1) * pageSize
+  const slice = sorted.slice(start, start + pageSize)
+
+  // 先补立绘再组装视图：memberViews 依赖本地是否已有立绘决定 avatar 字段；补图失败不阻断查询
+  const avatarIds = avatarIdsOf(slice)
+  if (opts.downloadAvatars !== false && getPluginConfig()?.avatarEnabled !== false && avatarIds.length) {
+    await ensureAvatars(avatarIds, opts).catch(() => {})
+  }
+
+  const info = cacheInfo()
+  return {
+    ok: true,
+    total,
+    page,
+    totalPages,
+    pageSize,
+    rows: buildRows(slice, start + 1),
+    avatarIds,
+    subtitle: describe({ ...q, sort: opts.sort || q.sort || 'damage' }, character),
+    stale: info.stale,
+    fetchedAt: info.fetchedAt,
+    refreshed: fresh.refreshed,
+    refreshError: fresh.ok ? '' : fresh.error,
+    scope: { teams: teams.length }
+  }
+}

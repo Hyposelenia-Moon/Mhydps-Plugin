@@ -1,0 +1,25 @@
+# Mhydps-Plugin 配置模板
+# 锅巴保存时读取本文件，把 ${变量} 替换为表单值后写入 config/config.yaml
+# priority：数字越小越先执行（默认 8000，低于 Atlas-Plugin 的 10000）
+priority: ${mhydps_priority}
+
+# 渲染缩放比例
+renderScale: ${mhydps_renderScale}
+
+# ---------- 网络 ----------
+# 抓取 mhydps.cn 使用的代理，留空 = 直连
+# 国内直连 www.mhydps.cn 会被重置（TLS 握手阶段 RST），需要本地代理
+proxy: "${mhydps_proxy}"
+
+# 单次请求超时（毫秒）
+timeoutMs: ${mhydps_timeoutMs}
+
+# ---------- 缓存 ----------
+# 榜单数据缓存有效期（分钟）
+cacheTtlMinutes: ${mhydps_cacheTtlMinutes}
+
+# 榜单每页条数
+pageSize: ${mhydps_pageSize}
+
+# 是否缓存并渲染角色立绘
+avatarEnabled: ${mhydps_avatarEnabled}

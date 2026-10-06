@@ -1,0 +1,15 @@
+{
+  "name": "Mhydps-Plugin",
+  "version": "1.0.0",
+  "description": "TRSS-Yunzai v3 插件：查询 mhydps.cn 原神 DPS 数据库配队榜单、危战榜单与 Enka 练度",
+  "author": "Hyposelenia",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "test": "node test/run.mjs"
+  },
+  "dependencies": {
+    "https-proxy-agent": "^7.0.6",
+    "yaml": "^2.4.5"
+  }
+}

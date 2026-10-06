@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/base.css"/>
+  <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/components.css"/>
+  <style>
+    /* 练度查询页专用：玩家卡 + 角色卡（身份 / 武器天赋 / 面板 / 圣遗物） */
+
+    /* ===== 玩家信息卡 ===== */
+    .player-card {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      background: linear-gradient(135deg, rgba(74, 158, 255, 0.14), rgba(168, 85, 247, 0.12));
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin-bottom: 12px;
+    }
+    /* 玩家昵称 */
+    .player-name {
+      font-size: 26px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    /* 玩家信息小标签组 */
+    .player-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    /* 单个信息标签 */
+    .player-tag {
+      font-size: 17px;
+      color: #a9c8ff;
+      background: rgba(18, 18, 26, 0.45);
+      border: 1px solid rgba(74, 158, 255, 0.35);
+      border-radius: 999px;
+      padding: 1px 10px;
+      white-space: nowrap;
+    }
+
+    /* ===== 角色卡列表 ===== */
+    .build-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ===== 单个角色卡 ===== */
+    .build-card {
+      background: #1b1b26;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 12px 16px;
+    }
+
+    /* ===== 角色卡上部：身份 / 武器天赋 / 关键面板 三栏 ===== */
+    .build-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    /* 左栏：头像 + 名字 + 元素 / 等级 / 命座 */
+    .build-side {
+      flex: 0 0 262px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    /* 大号头像（沿用组件 .avatar 的比例，只放大尺寸） */
+    .build-side .avatar {
+      width: 84px;
+      height: 84px;
+      flex: 0 0 84px;
+    }
+    .build-side .avatar-text {
+      font-size: 16px;
+    }
+    .build-side .avatar-con {
+      font-size: 15px;
+    }
+    /* 名字与副信息 */
+    .build-ident {
+      flex: 1 1 auto;
+      min-width: 130px;
+    }
+    .build-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.3;
+    }
+    .build-sub {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    /* 等级 / 命座 / 星级 */
+    .build-lv {
+      font-size: 17px;
+      color: #e8e8f2;
+    }
+    .build-con {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffd700;
+      border: 1px solid rgba(255, 215, 0, 0.40);
+      border-radius: 8px;
+      padding: 0 6px;
+      line-height: 1.5;
+    }
+    .build-rarity {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    /* 中栏：武器与天赋 */
+    .build-mid {
+      flex: 0 0 300px;
+    }
+    .build-block {
+      margin-bottom: 8px;
+    }
+    .build-block:last-child {
+      margin-bottom: 0;
+    }
+    /* 小节标题 */
+    .build-block-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #4a9eff;
+      margin-bottom: 4px;
+    }
+    /* 武器一行：名称 + 等级 + 精炼 + 星级 */
+    .weapon-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+    .weapon-name {
+      font-size: 19px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+    .weapon-lv {
+      font-size: 17px;
+      color: #9a9ab4;
+    }
+    /* 天赋文本 */
+    .talent-text {
+      font-size: 19px;
+      color: #e8e8f2;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    /* 右栏：关键面板（三列网格由组件 .stat-grid 提供） */
+    .build-stats {
+      flex: 1 1 auto;
+      min-width: 400px;
+    }
+
+    /* ===== 圣遗物区：5 件一排 ===== */
+    .artifact-list {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(178px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    /* 单件圣遗物卡 */
+    .artifact-card {
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+    .artifact-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .artifact-slot {
+      font-size: 17px;
+      font-weight: 600;
+      color: #4a9eff;
+    }
+    .artifact-lv {
+      font-size: 16px;
+      color: #ffd700;
+      font-variant-numeric: tabular-nums;
+    }
+    .artifact-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e8e8f2;
+      line-height: 1.3;
+      margin: 2px 0 4px;
+      word-break: break-word;
+    }
+    /* 主词条：左名右值 */
+    .artifact-main {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.10);
+    }
+    .artifact-main-label {
+      font-size: 16px;
+      color: #9a9ab4;
+    }
+    .artifact-main-value {
+      font-size: 19px;
+      font-weight: 700;
+      color: #ffd700;
+      font-variant-numeric: tabular-nums;
+    }
+    /* 副词条列表 */
+    .substat-list {
+      margin-top: 4px;
+    }
+    .substat-item {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    .substat-label {
+      color: #9a9ab4;
+    }
+    .substat-value {
+      color: #c8c8dc;
+      font-variant-numeric: tabular-nums;
+    }
+    /* 副词条条数 */
+    .substat-count {
+      margin-top: 4px;
+      font-size: 15px;
+      color: #a855f7;
+    }
+    /* 卡片内兜底说明 */
+    .build-note {
+      font-size: 18px;
+      color: #6f6f88;
+      padding: 4px 0;
+    }
+  </style>
+</head>
+<body style="zoom:{{renderScale}}">
+  <div class="header">
+    <div class="game-name">Mhydps-Plugin · 练度查询</div>
+    <div class="title">{{if title}}{{title}}{{else}}角色练度查询{{/if}}</div>
+  </div>
+
+  <!-- 玩家信息卡 -->
+  {{if player}}
+  <div class="player-card">
+    <div class="player-name">{{if player.nickname}}{{player.nickname}}{{else}}未知昵称{{/if}}</div>
+    <div class="player-tags">
+      {{if player.uid}}<span class="player-tag">UID {{player.uid}}</span>{{/if}}
+      {{if player.level || player.level === 0}}<span class="player-tag">等级 {{player.level}}</span>{{/if}}
+      {{if player.worldLevel || player.worldLevel === 0}}<span class="player-tag">世界等级 {{player.worldLevel}}</span>{{/if}}
+      {{if player.region}}<span class="player-tag">{{player.region}}</span>{{/if}}
+    </div>
+  </div>
+  {{else}}
+  <div class="empty-hint">未取到玩家信息</div>
+  {{/if}}
+
+  <!-- 角色卡列表 -->
+  {{if chars && chars.length > 0}}
+  <div class="build-list">
+    {{each chars ch}}
+    <div class="build-card">
+      <div class="build-top">
+        <!-- 左：头像 + 名字 + 元素 / 等级 / 命座 -->
+        <div class="build-side">
+          <div class="avatar">
+            {{if ch.avatar}}
+            <img class="avatar-img" src="{{_data_path}}/avatar/{{ch.avatar}}.webp"/>
+            {{else}}
+            <div class="avatar-text">{{if ch.name}}{{ch.name}}{{else}}?{{/if}}</div>
+            {{/if}}
+            {{if ch.constellation}}<span class="avatar-con">C{{ch.constellation}}</span>{{/if}}
+          </div>
+          <div class="build-ident">
+            <div class="build-name">{{if ch.name}}{{ch.name}}{{else}}未知角色{{/if}}</div>
+            <div class="build-sub">
+              {{if ch.elementCn}}<span class="char-elem elem-{{ch.elementCn}}">{{ch.elementCn}}</span>{{/if}}
+              {{if ch.level || ch.level === 0}}<span class="build-lv">Lv.{{ch.level}}</span>{{/if}}
+              {{if ch.rarity}}<span class="build-rarity rarity-{{ch.rarity}}">{{ch.rarity}}★</span>{{/if}}
+            </div>
+          </div>
+        </div>
+
+        <!-- 中：武器与天赋 -->
+        <div class="build-mid">
+          <div class="build-block">
+            <div class="build-block-title">武器</div>
+            {{if ch.weapon}}
+            <div class="weapon-line">
+              <span class="weapon-name">{{if ch.weapon.name}}{{ch.weapon.name}}{{else}}未知武器{{/if}}</span>
+              {{if ch.weapon.level || ch.weapon.level === 0}}<span class="weapon-lv">Lv.{{ch.weapon.level}}</span>{{/if}}
+              {{if ch.weapon.refine}}<span class="tag tag-lvl">精{{ch.weapon.refine}}</span>{{/if}}
+              {{if ch.weapon.rarity}}<span class="build-rarity rarity-{{ch.weapon.rarity}}">{{ch.weapon.rarity}}★</span>{{/if}}
+            </div>
+            {{else}}
+            <div class="build-note">未取到武器数据</div>
+            {{/if}}
+          </div>
+          <div class="build-block">
+            <div class="build-block-title">天赋</div>
+            <div class="talent-text">{{if ch.talentText}}{{ch.talentText}}{{else}}未公开{{/if}}</div>
+          </div>
+        </div>
+
+        <!-- 右：关键面板（三列网格） -->
+        <div class="build-stats">
+          <div class="build-block-title">关键面板</div>
+          {{if ch.stats && ch.stats.length > 0}}
+          <div class="stat-grid">
+            {{each ch.stats s}}
+            <div class="stat-cell">
+              <div class="stat-label">{{if s.label}}{{s.label}}{{else}}属性{{/if}}</div>
+              <div class="stat-value">{{if s.value || s.value === 0}}{{s.value}}{{else}}—{{/if}}</div>
+            </div>
+            {{/each}}
+          </div>
+          {{else}}
+          <div class="build-note">未取到面板数据</div>
+          {{/if}}
+        </div>
+      </div>
+
+      <!-- 下：5 件圣遗物 -->
+      {{if ch.artifacts && ch.artifacts.length > 0}}
+      <div class="artifact-list">
+        {{each ch.artifacts a}}
+        <div class="artifact-card">
+          <div class="artifact-head">
+            <span class="artifact-slot">{{if a.slot}}{{a.slot}}{{else}}圣遗物{{/if}}</span>
+            {{if a.level || a.level === 0}}<span class="artifact-lv">+{{a.level}}</span>{{/if}}
+          </div>
+          <div class="artifact-name">{{if a.name}}{{a.name}}{{else}}未知圣遗物{{/if}}</div>
+          <div class="artifact-main">
+            <span class="artifact-main-label">{{if a.mainLabel}}{{a.mainLabel}}{{else}}主词条{{/if}}</span>
+            <span class="artifact-main-value">{{if a.mainValue || a.mainValue === 0}}{{a.mainValue}}{{else}}—{{/if}}</span>
+          </div>
+          {{if a.substats && a.substats.length > 0}}
+          <div class="substat-list">
+            {{each a.substats sub}}
+            <div class="substat-item">
+              <span class="substat-label">{{if sub.label}}{{sub.label}}{{else}}词条{{/if}}</span>
+              <span class="substat-value">{{if sub.value || sub.value === 0}}{{sub.value}}{{else}}—{{/if}}</span>
+            </div>
+            {{/each}}
+          </div>
+          {{/if}}
+          {{if a.substatCount || a.substatCount === 0}}
+          <div class="substat-count">副词条 {{a.substatCount}} 条</div>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{else}}
+      <div class="build-note">未取到圣遗物数据</div>
+      {{/if}}
+    </div>
+    {{/each}}
+  </div>
+  {{else}}
+  <div class="empty-hint">该 UID 未公开角色详情</div>
+  {{/if}}
+
+  <div class="copyright">{{copyright}}</div>
+</body>
+</html>

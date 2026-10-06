@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/base.css"/>
+  <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/components.css"/>
+  <style>
+    /* 帮助页专用：分组标题 + 命令行条目 */
+    .help-section {
+      margin-bottom: 14px;
+    }
+    /* 分组标题：卡片式，左侧蓝色竖线 */
+    .help-section-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.3;
+      padding: 6px 12px;
+      background: #1b1b26;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-left: 4px solid #4a9eff;
+      border-radius: 8px;
+      margin-bottom: 6px;
+    }
+    /* 指令列表卡片：承接分组下的所有条目 */
+    .help-list {
+      background: #1b1b26;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 2px 0;
+    }
+    /* 单条指令行：左指令右说明；说明可能换行，故顶端对齐而不是基线对齐 */
+    .help-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 6px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .help-item:last-child {
+      border-bottom: none;
+    }
+    /* 指令名 */
+    .help-cmd {
+      font-size: 20px;
+      font-weight: 600;
+      color: #ffd700;
+      line-height: 1.5;
+      min-width: 170px;
+      white-space: nowrap;
+    }
+    /* 指令说明：限制最大宽度，避免整页被长句撑宽 */
+    .help-desc {
+      font-size: 20px;
+      line-height: 1.5;
+      color: #9a9ab4;
+      max-width: 760px;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body style="zoom:{{renderScale}}">
+  <div class="header">
+    <div class="game-name">Mhydps-Plugin</div>
+    <div class="title">{{if helpCfg && helpCfg.title}}{{helpCfg.title}}{{else}}#DPS帮助{{/if}}</div>
+    {{if helpCfg && helpCfg.subTitle}}
+    <div class="subtitle">{{helpCfg.subTitle}}</div>
+    {{/if}}
+  </div>
+
+  {{if helpGroup && helpGroup.length > 0}}
+  {{each helpGroup group}}
+  <div class="help-section">
+    <div class="help-section-title">{{group.group}}</div>
+    <div class="help-list">
+    {{if group.list && group.list.length > 0}}
+    {{each group.list item}}
+    <div class="help-item">
+      <span class="help-cmd">{{item.title}}</span>
+      <span class="help-desc">{{if item.desc}}{{item.desc}}{{else}}-{{/if}}</span>
+    </div>
+    {{/each}}
+    {{else}}
+    <div class="help-item">
+      <span class="help-desc">该分组暂无指令</span>
+    </div>
+    {{/if}}
+    </div>
+  </div>
+  {{/each}}
+  {{else}}
+  <div class="empty-hint">未取到帮助配置，请检查插件 help 配置项</div>
+  {{/if}}
+
+  <div class="copyright">{{copyright}}</div>
+</body>
+</html>

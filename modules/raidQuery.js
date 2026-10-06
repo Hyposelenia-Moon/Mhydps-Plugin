@@ -1,0 +1,154 @@
+/**
+ * raidQuery — 危战榜单查询
+ *
+ * 数据口径（来自站点 /api/teams2 全量记录）：
+ *   speed   通关耗时（秒）
+ *   ver     版本（5.7 ~ 当前，站点每期三个首领）
+ *   boss    首领 id，名称来自随插件分发的 resources/data/bosses.json
+ *   cost    总金数 = limitcost + normalcost
+ * 站点前端的排序是「金数升序 → 耗时升序」，本模块默认同口径（opts.sort = 'costAsc'）。
+ */
+import { getSnapshot, ensureFresh, cacheInfo } from '../model/TeamStore.js'
+import { findCharacter, searchCharacters, memberIs, bossById, findBoss, bossesOfVer, versions } from '../model/CharacterIndex.js'
+import { ensureAvatars } from '../model/AvatarStore.js'
+import { getPageSize, getPluginConfig } from '../components/config.js'
+import { speedText, MAX_PAGE_SIZE } from '../components/constants.js'
+import { memberViews, avatarIdsOf, tagViews } from './teamView.js'
+
+/** 排序口径 */
+export const RAID_SORTS = {
+  // 站点默认：低金优先，同金数比耗时
+  costAsc: (a, b) => a.cost - b.cost || a.speed - b.speed,
+  speed: (a, b) => a.speed - b.speed || a.cost - b.cost,
+  costDesc: (a, b) => b.cost - a.cost || a.speed - b.speed
+}
+
+/**
+ * 按条件筛选危战记录
+ * @param {object[]} teams
+ * @param {object} [q]
+ * @param {object} [q.bossRecord] - CharacterIndex 首领记录
+ * @param {string} [q.ver]
+ * @param {object} [q.character] - 角色记录
+ * @param {number} [q.costMin]
+ * @param {number} [q.costMax]
+ * @returns {object[]}
+ */
+export function filterRaids (teams, q = {}) {
+  return (teams || []).filter(t => {
+    if (q.ver && t.ver !== q.ver) return false
+    if (q.bossRecord && t.boss !== q.bossRecord.id) return false
+    if (q.character && !(t.members || []).some(m => memberIs(m.charId, q.character))) return false
+    if (Number.isFinite(q.costMin) && t.cost < q.costMin) return false
+    if (Number.isFinite(q.costMax) && t.cost > q.costMax) return false
+    return true
+  })
+}
+
+/** 排序（不改原数组） */
+export function sortRaids (teams, sort = 'costAsc') {
+  const cmp = RAID_SORTS[sort] || RAID_SORTS.costAsc
+  return [...(teams || [])].sort(cmp)
+}
+
+/** 组装单行视图 */
+export function buildRows (teams, startRank = 1) {
+  return (teams || []).map((team, i) => ({
+    rank: startRank + i,
+    speed: team.speed,
+    speedText: speedText(team.speed),
+    cost: team.cost,
+    limitcost: team.limitcost,
+    normalcost: team.normalcost,
+    ver: team.ver,
+    bossName: bossById(team.boss)?.name || (team.boss ? `首领#${team.boss}` : '-'),
+    tags: tagViews(team),
+    clean: team.clean,
+    lvl: team.lvl,
+    video: team.video,
+    chars: memberViews(team.members)
+  }))
+}
+
+/** 查询摘要 */
+function describe (q, { character, bossRecord }) {
+  const parts = []
+  if (q.ver) parts.push(`版本 ${q.ver}`)
+  if (bossRecord) parts.push(bossRecord.name)
+  if (character) parts.push(character.name)
+  if (Number.isFinite(q.costMax)) parts.push(`≤${q.costMax}金`)
+  parts.push(q.sort === 'speed' ? '按耗时升序' : q.sort === 'costDesc' ? '按金数降序' : '按金数升序')
+  return parts.join(' · ')
+}
+
+/**
+ * 查询危战榜
+ * @param {object} q - 解析后的参数（见 modules/queryArgs.js 的 parseRaidArgs）
+ * @param {object} [opts] - { proxy, timeoutMs, sort, pageSize }
+ * @returns {Promise<object>}
+ */
+export async function queryRaid (q = {}, opts = {}) {
+  const character = q.char ? findCharacter(q.char) : null
+  if (q.char && !character) {
+    return {
+      ok: false,
+      error: `没有找到角色「${q.char}」`,
+      suggestions: searchCharacters(q.char, 6).map(c => c.name)
+    }
+  }
+
+  const bossRecord = q.boss ? findBoss(q.boss) : null
+  if (q.boss && !bossRecord) {
+    return {
+      ok: false,
+      error: `没有找到首领「${q.boss}」`,
+      suggestions: versions().slice(0, 3).flatMap(v => bossesOfVer(v).map(b => b.name)).slice(0, 6)
+    }
+  }
+
+  if (q.ver && !versions().includes(q.ver)) {
+    return {
+      ok: false,
+      error: `没有版本「${q.ver}」的危战记录`,
+      suggestions: versions().slice(0, 6)
+    }
+  }
+
+  const fresh = await ensureFresh(opts)
+  const { teams2 } = getSnapshot()
+
+  const filtered = filterRaids(teams2, { ...q, character, bossRecord })
+  const sort = opts.sort || q.sort || 'costAsc'
+  const sorted = sortRaids(filtered, sort)
+
+  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(opts.pageSize || getPageSize())))
+  const total = sorted.length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const page = Math.min(Math.max(1, Number(q.page) || 1), totalPages)
+  const start = (page - 1) * pageSize
+  const slice = sorted.slice(start, start + pageSize)
+
+  // 先补立绘再组装视图（同 rankQuery）
+  const avatarIds = avatarIdsOf(slice)
+  if (opts.downloadAvatars !== false && getPluginConfig()?.avatarEnabled !== false && avatarIds.length) {
+    await ensureAvatars(avatarIds, opts).catch(() => {})
+  }
+
+  const info = cacheInfo()
+  return {
+    ok: true,
+    total,
+    page,
+    totalPages,
+    pageSize,
+    rows: buildRows(slice, start + 1),
+    avatarIds,
+    versions: versions(),
+    subtitle: describe({ ...q, sort }, { character, bossRecord }),
+    stale: info.stale,
+    fetchedAt: info.fetchedAt,
+    refreshed: fresh.refreshed,
+    refreshError: fresh.ok ? '' : fresh.error,
+    scope: { teams2: teams2.length }
+  }
+}
