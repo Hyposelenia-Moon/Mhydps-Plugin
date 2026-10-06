@@ -34,7 +34,7 @@ const { buildCharView } = await import(mod('modules/buildQuery.js'))
 const { readPlayer } = await import(mod('model/EnkaClient.js'))
 const { cacheInfo, getCounts } = await import(mod('model/TeamStore.js'))
 const { avatarStats } = await import(mod('model/AvatarStore.js'))
-const { helpCfg, helpList } = await import(mod('resources/help/help-cfg.js'))
+const { helpCfg, helpList, quickStart } = await import(mod('resources/help/help-cfg.js'))
 const { versions } = await import(mod('model/CharacterIndex.js'))
 const { COPYRIGHT, SITE_NAME, formatTime, agoText } = await import(mod('components/constants.js'))
 const { pluginVersion, yunzaiVersion, versionText } = await import(mod('components/pluginVersion.js'))
@@ -190,6 +190,7 @@ if (status.html) {
 const helpData = {
   siteName: SITE_NAME,
   helpCfg,
+  quickStart,
   helpGroup: helpList.map(g => ({ group: g.group, list: g.list })),
   copyright: COPYRIGHT
 }
@@ -198,7 +199,35 @@ check('help 出图成功', Boolean(help.img), help.err)
 if (help.html) {
   checkRefs(help.html, path.dirname(path.join(appRoot, 'temp', 'html', 'Mhydps-Plugin', 'dps', 'help', 'x.html')), 'help', /(?:href|src)="([^"]+)"/g)
   check('help：渲染了指令条目', help.html.includes('#DPS榜') && help.html.includes('#DPS危战榜') && help.html.includes('#DPS练度查询'))
+  check('help：渲染了快速上手卡', help.html.includes('快速上手') && help.html.includes('quick-cmd'))
+  check('help：渲染了参数速查', help.html.includes('quick-note-label') && help.html.includes('金数筛选'))
+  check('help：渲染了分组序号', help.html.includes('help-index'))
+  check('help：渲染了参数表', help.html.includes('help-args') && help.html.includes('参数') && help.html.includes('取值'))
+  check('help：参数表内容来自配置', help.html.includes('角色名或别名') && help.html.includes('总金 = 限定金 + 常驻金'))
+  check('help：渲染了示例', help.html.includes('help-example') && help.html.includes('#DPS榜 火神 12金 主C'))
+  // art-template 默认转义尖括号（实体形式随版本而异，两种都认）
+  check('help：示例中的尖括号被转义而非当标签', /(&#60;|&lt;)9位UID(&#62;|&gt;)/.test(help.html))
 }
+
+// ---- 白底主题：配色只在 base.css 的变量块里，模板与组件不写死色值 ----
+const baseCss = fs.readFileSync(path.join(pluginRoot, 'resources', 'common', 'base.css'), 'utf8')
+const compCss = fs.readFileSync(path.join(pluginRoot, 'resources', 'common', 'components.css'), 'utf8')
+
+check('主题底色为纯白', /--bg:\s*#ffffff/i.test(baseCss))
+check('body 使用主题底色变量', /body\s*\{[\s\S]*?background-color:\s*var\(--bg\)/.test(baseCss))
+const darkLeftovers = ['#12121a', '#1b1b26', '#262634', '#e8e8f2', '#c8c8dc', '#9a9ab4', '#7a7a96', '#6f6f88', '#a9c8ff', '#ff9c9c', '#4a9eff', '#ffd700', '#a855f7']
+  .filter(c => (baseCss + compCss).toLowerCase().includes(c))
+check('样式里没有残留的深色主题色', darkLeftovers.length === 0, darkLeftovers.join(','))
+const varUses = (compCss.match(/var\(--/g) || []).length
+check('组件样式全部走变量着色', varUses >= 40, `${varUses} 处`)
+
+const templateColors = []
+for (const f of ['help.html', 'rank.html', 'raid.html', 'build.html', 'status.html']) {
+  const text = fs.readFileSync(path.join(pluginRoot, 'resources', 'dps', f), 'utf8')
+  const hits = text.match(/#[0-9a-fA-F]{3,8}\b|rgba?\(/g)
+  if (hits) templateColors.push(`${f}:${hits.join('/')}`)
+}
+check('模板内不写死颜色（全部走变量）', templateColors.length === 0, templateColors.join(' | '))
 
 // ---- 渲染缩放：由配置注入模板（调用方传的值不生效，避免绕过配置） ----
 const scaled = await renderOnce('rank', { ...rankData, renderScale: 2 }, 'test-rank-scale')

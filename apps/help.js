@@ -28,18 +28,31 @@ export class MhydpsHelp extends plugin {
    * 动态 import help-cfg.js（带时间戳绕过 ESM 缓存），改帮助文案无需重启 bot
    */
   async handleHelp (e) {
+    // 文本回退与出图共用同一份数据，失败时才能保证内容一致
+    let helpCfg = { title: TITLE, subTitle: '' }
+    let helpGroup = []
+    let quickStart = null
+
     try {
       const helpPath = `${process.cwd()}/plugins/Mhydps-Plugin/resources/help/help-cfg.js`
-      const { helpCfg, helpList } = await import(`file://${helpPath}?t=${Date.now()}`)
+      const cfgMod = await import(`file://${helpPath}?t=${Date.now()}`)
+      helpCfg = cfgMod.helpCfg || helpCfg
+      quickStart = cfgMod.quickStart || null
 
-      const helpGroup = helpList
+      helpGroup = (cfgMod.helpList || [])
         .filter(group => group.auth !== 'master' || e.isMaster)
         .map(group => ({
           group: group.group,
-          list: group.list.map(item => ({ title: item.title, desc: item.desc }))
+          list: group.list.map(item => ({
+            title: item.title,
+            desc: item.desc,
+            syntax: item.syntax,
+            args: item.args,
+            examples: item.examples
+          }))
         }))
 
-      const data = { siteName: SITE_NAME, helpCfg, helpGroup, copyright: COPYRIGHT }
+      const data = { siteName: SITE_NAME, helpCfg, quickStart, helpGroup, copyright: COPYRIGHT }
       const img = await renderDps('help', data)
       if (img) {
         await e.reply(img)
@@ -50,16 +63,35 @@ export class MhydpsHelp extends plugin {
       logger?.error?.(`[Mhydps] 帮助图渲染失败：${err?.message || err}`)
     }
 
-    // 文本回退：与 help-cfg.js 内容保持一致的要点版
-    await e.reply(
-      `${TITLE}｜${SITE_NAME}\n`
-      + '· #DPS榜 [角色] [金数] [标签] [主C] [绿玩] [第N页] — DPS 数据库配队榜\n'
-      + '· #DPS危战榜 [版本] [首领] [角色] [金数] [第N页] — 危战榜单\n'
-      + '· #DPS练度查询 <9位UID> — 角色面板与圣遗物明细（Enka 数据）\n'
-      + '· #DPS状态 — 缓存时间与条数\n'
-      + '· #DPS帮助 — 本帮助\n'
-      + (e.isMaster ? '· #DPS更新 — 立即刷新榜单缓存（仅主人）\n' : '')
-    )
+    await e.reply(this.textOf({ helpCfg, quickStart, helpGroup, isMaster: e.isMaster }))
     return true
+  }
+
+  /**
+   * 文本回退：按分组列命令与说明，并带上参数速查
+   * @param {object} view - { helpCfg, quickStart, helpGroup, isMaster }
+   * @returns {string}
+   */
+  textOf (view) {
+    const lines = [view.helpCfg?.title || TITLE]
+    if (view.helpCfg?.subTitle) lines.push(view.helpCfg.subTitle)
+
+    if (view.quickStart?.notes?.length) {
+      lines.push('', '【参数速查】')
+      for (const note of view.quickStart.notes) {
+        lines.push(`· ${note.label}：${note.text}`)
+      }
+    }
+
+    for (const group of view.helpGroup) {
+      lines.push('', `【${group.group}】`)
+      for (const item of group.list) {
+        lines.push(`· ${item.title}${item.desc ? ` — ${item.desc}` : ''}`)
+        if (item.examples?.length) lines.push(`   例：${item.examples.join('　')}`)
+      }
+    }
+
+    if (!view.isMaster) lines.push('', '（主人指令：#DPS更新）')
+    return lines.join('\n')
   }
 }

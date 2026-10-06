@@ -89,6 +89,8 @@ config/config.yaml.example  ← 参考默认值（入库，首次启动自动复
 
 - 模板在 `resources/dps/*.html`，art-template 语法；`{{_res_path}}` / `{{_data_path}}` / `{{renderScale}}` / `{{copyright}}` 由 `components/render.js` 注入。
 - 模板内不写 `<script>`，不引用外部字体（仓库不携带字体文件）。
+- **配色只写在 `resources/common/base.css` 的 `:root` 变量块**（当前为白底浅色一套）：`components.css` 与 5 个模板一律 `var(--x)`，不得写死色值；这条由 `render-templates` 套件守门（残留深色主题色或模板里出现 hex/rgba 都会红）。
+- 帮助图内容来自 `resources/help/help-cfg.js`（`helpCfg` / `quickStart` / `helpList`；条目可选 `syntax` / `args` / `examples`），改文案无需重启 bot，但**结构契约由 `help-config` 套件钉住**。
 - `components/render.js` 的 `RES_PREFIX` 层级依赖框架把 HTML 写到 `temp/html/<插件名>/<APP>/<tpl>/`，改动模板命名前先读该文件注释。
 
 ### 日志与注释
