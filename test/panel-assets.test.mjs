@@ -140,4 +140,14 @@ check('没有 miao 时武器文案为 null', A.weaponDetail('护摩之杖', 1) =
 process.env.MHYDPS_MIAO_RES = bakMiao
 process.env.MHYDPS_PROFILE_IMG = bakGallery
 
+// ---- 面板模板契约：照 miao 的版式，但不搬它下面那块「伤害计算」 ----
+// 站点数据里没有伤害计算所需的配置/敌人参数，硬搬只会得到一张空表或编造的数字。
+const buildHtml = fs.readFileSync(path.join(pluginRoot, 'resources', 'dps', 'build.html'), 'utf8')
+const panelCssText = fs.readFileSync(path.join(pluginRoot, 'resources', 'profile', 'panel.css'), 'utf8')
+const dmgMarkers = ['dmg-cont', 'dmg-list', 'dmg-idx', 'dmg-title', '伤害计算', '期望伤害']
+check('面板不包含 miao 的伤害计算区块', dmgMarkers.every(m => !buildHtml.includes(m) && !panelCssText.includes(m)),
+  dmgMarkers.filter(m => buildHtml.includes(m) || panelCssText.includes(m)).join(','))
+check('面板仍然保留「暴击伤害」这条属性（属性行是站点数据）', buildHtml.includes('i-cdmg') || panelCssText.includes('.i-cdmg'))
+check('面板止于武器卡与圣遗物卡（没有第五个区块）', !buildHtml.includes('panel-dmg') && !panelCssText.includes('.panel-dmg'))
+
 finish()

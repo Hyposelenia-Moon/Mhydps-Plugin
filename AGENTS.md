@@ -104,6 +104,7 @@ config/config.yaml.example  ← 参考默认值（入库，首次启动自动复
 ### 练度面板（`#DPS练度查询`）
 
 - 版式照 miao-plugin（AxiuCN 版）的 `profile-detail`：一屏一角色（600px 卡）→ 立绘铺满 + 右侧名字/等级/命座 → 三枚天赋圆徽章 → 属性表（交错暗行 + `i-*` 图标）→ 6 枚命座圆图标 → 5 张圣遗物卡 + 武器卡（含被动文案）。改版式时对照 `plugins/miao-plugin/resources/character/profile-detail.{html,css}`，不要凭印象改。
+- **不要搬 miao 面板底部那块「伤害计算」表**（`dmg-cont` / `dmg-list` / `dmg-idx` 那一套）：它依赖 miao 自己的伤害计算模块与敌人参数，站点数据里没有对应字段，搬过来只能得到空表或编造数字。面板到「武器卡 + 圣遗物卡」为止；`i-cdmg`（暴击伤害属性行）是站点面板字段，保留。这条由 `panel-assets` 与 `render-templates` 两个套件守门。
 - 面板素材（图库立绘 / 命座 / 武器 / 圣遗物图标 / 武器文案 / 属性图标雪碧图）全部走 `model/PanelAssets.js`：**只读引用本机已安装的 ProfileImg 图库与 miao-plugin，绝不入库**（图库 300MB+ 且禁止商用，本插件是 GPL 仓库）。
 - 目录探测顺序固定为「环境变量 `MHYDPS_PROFILE_IMG` / `MHYDPS_MIAO_RES` → 配置 `profileImgDir` / `miaoResDir` → 本机默认路径」；**任何素材缺失都必须降级而不是抛错**：立绘退回官方立绘 → 站点立绘 → 空（模板不裂图），图标缺失整块不渲染。
 - 素材按需复制到 `data/panel/`（gitignore），文件名带 `avatarId` 以保持同一角色每次同一张图；改选图规则时同步 `test/panel-assets.test.mjs`。

@@ -176,6 +176,7 @@ if (build.html) {
   check('build：属性行带 miao 的图标类名', /class="i-(hp|atk|def|mastery|cpct|cdmg|recharge)"/.test(build.html))
   check('build：筛选提示行已渲染', build.html.includes('已按 胡桃 筛选'))
   check('build：整页插画底与内容条仍在', build.html.includes('bg-build.jpg') && build.html.includes('head-card') && build.html.includes('foot-card'))
+  check('build：不含 miao 的伤害计算区块（站点没有该数据）', !build.html.includes('dmg-cont') && !build.html.includes('伤害计算') && !build.html.includes('期望伤害'))
 }
 
 // ---- status ----
