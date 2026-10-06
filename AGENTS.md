@@ -107,13 +107,33 @@ config/config.yaml.example  ← 参考默认值（入库，首次启动自动复
 - 临时产物写 `test/.test-tmp/`（gitignore）；套件不得改动仓库里的源数据。
 - 只测对外行为与契约，不 import 生产代码的私有函数。
 
-## 六、Git
+## 六、部署与验证（单向链路）
 
-- **不执行任何 git 操作**（`add` / `commit` / `push` / `merge` / `rebase` 等），由维护者执行。
+同一份代码存在于两个位置，**只有一处允许被修改**：
+
+| 位置 | 角色 | 允许的操作 |
+|------|------|------------|
+| 源码工作区（如 `D:\文件\游戏\原神\Mhydps-Plugin`） | 唯一的工作树 | 改代码、跑离线套件、提交、推送 |
+| `<bot根>/plugins/Mhydps-Plugin` | 部署副本（git clone），由框架 `#更新` 用 git 维护 | 只允许 `#更新 Mhydps-Plugin` / `git pull` |
+
+**禁止把工作区的文件拷进部署副本**（robocopy / 手工复制 / 解压覆盖都不行）：那会在部署副本里制造「未提交的本地改动」，此后每次 `git pull` 都会被 `local changes would be overwritten by merge` 中止，框架只能提示改用 `#强制更新`。
+
+真机验证的顺序：
+
+1. 在工作区改完 → 跑 `node test/run.mjs`（离线套件，**不要碰 bot 目录**）
+2. 提交并推送
+3. 在 bot 里发 `#更新 Mhydps-Plugin`（或到部署副本执行 `git pull`）
+4. 再在部署副本里跑 `node test/run.mjs`（渲染套件只有这里能跑），并检查出图
+
+部署副本里跑套件只会写 gitignore 的 `test/.test-tmp/` 与框架的 `temp/`，不改动任何被跟踪文件。
+
+## 七、Git
+
+- **不执行任何 git 操作**（`add` / `commit` / `push` / `merge` / `rebase` / `pull` 等），由维护者执行。
 - 改动完成后给提交摘要：单行标题 `prefix: 中文描述`（`feat:` / `fix:` / `refactor:` / `chore:` / `docs:`），详细列表每行 `- ` 一项。
-- 工作树里做的改动，完成后必须复制回主干目录再提交。
+- 不要在部署副本里直接改文件后提交：部署副本只接受远端拉取（见第六节）。
 
-## 七、需先确认才能做的事
+## 八、需先确认才能做的事
 
 - 改命令正则 / 触发词 / 权限等级 / 对群友可见的行为
 - 改 `priority` 默认值

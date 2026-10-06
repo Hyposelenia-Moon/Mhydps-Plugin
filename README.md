@@ -27,6 +27,18 @@ proxy: 'http://<代理主机>:<端口>'
 
 首次使用可以直接发查询命令（会自动拉取），也可以由主人执行 `#DPS更新` 立即拉取。
 
+## 更新
+
+```bash
+# 在 bot 里发送（推荐）
+#更新 Mhydps-Plugin
+
+# 或到插件目录手动拉取
+cd <bot根>/plugins/Mhydps-Plugin && git pull
+```
+
+> **不要用手工拷贝覆盖插件目录里的文件**。插件目录是 git 仓库，拷进去的文件会被 git 视为「未提交的本地改动」，之后 `#更新` / `git pull` 会被 `local changes would be overwritten by merge` 直接拒绝。要改代码请在源码仓库里改、提交、推送，再到 bot 侧更新。
+
 ## 命令一览
 
 | 命令 | 说明 |
