@@ -5,7 +5,8 @@ node_modules/
 config/config.yaml
 
 # 运行时缓存（榜单数据、角色头像、请求元信息）
-data/
+# 只忽略插件根下的 data/：写成 `data/` 会连 resources/data/（随包分发的角色表/首领表）一起忽略
+/data/
 
 # 操作系统临时文件
 .DS_Store
