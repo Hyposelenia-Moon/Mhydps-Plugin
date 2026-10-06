@@ -16,7 +16,6 @@
 import { fetchPlayer, readPlayer } from '../model/EnkaClient.js'
 import { characterById, elementCn, findCharacter } from '../model/CharacterIndex.js'
 import { ensureAvatars, hasAvatar } from '../model/AvatarStore.js'
-import { preparePanelAssets, prepareSharedAssets, weaponDetail } from '../model/PanelAssets.js'
 import { getPluginConfig } from '../components/config.js'
 import {
   ENKA_PROP_CN,
@@ -107,29 +106,29 @@ export function readTalents (skillLevelMap = {}) {
 
 /**
  * 武器
+ *
+ * 只给文本回退与状态展示用：面板图由 miao-plugin 自己按 itemId 解析武器（含名字/图标/文案），
+ * 这里读到的 `flat.name` 在站点数据缺名字时可能为空，故仅作展示字段。
  * @param {object} avatar - Enka avatarInfo
- * @returns {{name: string, level: number, refine: number, rarity: number, attrs: Array, detail: object|null}|null}
+ * @returns {{name: string, level: number, refine: number, rarity: number, attrs: Array}|null}
  */
 export function readWeapon (avatar) {
   const item = (avatar?.equipList || []).find(i => i?.flat?.itemType === 'ITEM_WEAPON')
   if (!item) return null
   const affix = item.weapon?.affixMap ? Number(Object.values(item.weapon.affixMap)[0]) : 0
   const refine = Number.isFinite(affix) ? affix + 1 : 1
-  const name = String(item.flat.name || '')
   // Enka 的 flat.weaponStats 就是武器面板（基础攻击 + 一条副词条），照原样展示
   const attrs = (item.flat.weaponStats || []).map(s => ({
     label: weaponStatLabel(s.appendPropId),
     value: weaponStatText(s.appendPropId, s.statValue)
   }))
   return {
-    name,
+    name: String(item.flat.name || ''),
     level: Number(item.weapon?.level) || 0,
     // Enka 的精炼等级是 0 基（0 = 精一）
     refine,
     rarity: Number(item.flat.rankLevel) || 5,
-    attrs,
-    // 武器文案来自本机 miao-plugin 静态表（缺失为 null，模板整块不渲染）
-    detail: weaponDetail(name, refine)
+    attrs
   }
 }
 
@@ -173,16 +172,15 @@ export function readArtifacts (avatar) {
 export function readPanel (fightPropMap = {}) {
   return PANEL_PROPS.map(p => ({
     label: p.label,
-    value: panelStatText(fightPropMap[p.key], p.percent),
-    icon: p.icon
+    value: panelStatText(fightPropMap[p.key], p.percent)
   }))
 }
 
 /**
- * 单个角色 → 视图数据
+ * 单个角色 → 视图数据（文本回退与状态展示用）
  *
- * `panel` 是面板版式要用的风格化素材（图库立绘 / 命座 / 武器 / 圣遗物图标），
- * 走 model/PanelAssets.js：素材缺失时各字段为空串，模板整体降级而不是裂图。
+ * 面板**出图**不再用这些字段：练度面板整页由 miao-plugin 的模板渲染（见 model/MiaoBridge.js），
+ * 名字/图标/评分都由 miao 按 itemId 现算，这里的 `weapon.name` 在站点数据缺名字时可能是空的。
  * @param {object} avatar - Enka avatarInfo
  * @returns {object}
  */
@@ -208,8 +206,7 @@ export function buildCharView (avatar) {
     talentText: talents.text,
     weapon,
     stats: readPanel(avatar?.fightPropMap),
-    artifacts,
-    panel: preparePanelAssets({ avatarId: id, name, constellation, weaponName: weapon?.name, artifacts })
+    artifacts
   }
 }
 
@@ -276,6 +273,13 @@ export async function queryBuild (uid, opts = {}) {
     .map(a => characterById(a?.avatarId)?.name || (a?.avatarId ? `#${a.avatarId}` : ''))
     .filter(Boolean)
 
+  // 面板出图要的是**原始** avatarInfo：miao 的解析器直接吃 Enka 结构（见 model/MiaoBridge.js）
+  const rawByAvatarId = {}
+  for (const item of picked) {
+    const id = String(item?.avatarId ?? '')
+    if (id) rawByAvatarId[id] = item
+  }
+
   return {
     ok: true,
     player,
@@ -288,7 +292,6 @@ export async function queryBuild (uid, opts = {}) {
     roster,
     truncated: all.length > MAX_BUILD_CHARS,
     avatarStat,
-    // 面板共用素材（miao 的底纹/星级/属性图标），缺失时各字段为空串
-    assets: prepareSharedAssets()
+    rawByAvatarId
   }
 }

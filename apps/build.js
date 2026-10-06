@@ -1,16 +1,16 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import { getPluginConfig, getProxy } from '../components/config.js'
-import { COPYRIGHT, SITE_NAME } from '../components/constants.js'
 import { queryBuild } from '../modules/buildQuery.js'
 import { buildText } from '../modules/formatText.js'
-import { respond } from '../modules/respond.js'
 import { parseBuildArgs } from '../modules/queryArgs.js'
+import { pickProfileImage } from '../model/ProfileImg.js'
+import { buildMiaoProfile, fileUrl, loadMiao, renderMiaoPanel, toPanelData } from '../model/MiaoBridge.js'
 
 const config = getPluginConfig()
 
 /**
  * `#DPS练度查询 [角色…] [UID]` —— 参数顺序随意，UID 与角色名都可省
- *   #DPS练度查询 123456789        该 UID 全部公开角色
+ *   #DPS练度查询 123456789        该 UID 面板（默认出等级最高的那个角色）
  *   #DPS练度查询 胡桃             只看胡桃（UID 取配置 defaultUid）
  *   #DPS练度查询 胡桃 123456789   两者都给
  */
@@ -20,8 +20,8 @@ const TITLE = '#DPS练度查询'
 
 /** 没给 UID 也没配 defaultUid 时的用法提示 */
 const USAGE = [
-  `${TITLE} <UID> — 该 UID 的全部公开角色`,
-  `${TITLE} <角色> [UID] — 只看指定角色（可写多个，如「胡桃 夜兰」）`,
+  `${TITLE} <UID> — 该 UID 的角色面板（默认出等级最高的那个）`,
+  `${TITLE} <角色> [UID] — 指定角色（可写多个，如「胡桃 夜兰」）`,
   '例：#DPS练度查询 胡桃　#DPS练度查询 胡桃 123456789',
   '未填 UID 时用配置项 defaultUid（锅巴里可设）'
 ].join('\n')
@@ -41,8 +41,11 @@ export class MhydpsBuild extends plugin {
   }
 
   /**
-   * #DPS练度查询 — 通过站点代理的 Enka 数据展示角色面板与圣遗物明细
-   * 每位玩家同一时间只能查到公开了「角色详情」的账号；给了角色名时只渲染这些角色
+   * #DPS练度查询 — 数据走站点代理的 Enka，画面整页交给 miao-plugin 的面板代码
+   *
+   * 出图链路（model/MiaoBridge.js）：原始 Enka avatarInfo → miao 的 EnkaData/Avatar
+   * （名字、图标、面板数值、圣遗物评分都由 miao 现算）→ miao 的 profile-detail 模板截图。
+   * miao-plugin 不可用时回退本插件的纯文本输出。
    */
   async handleBuild (e) {
     const text = (e.msg.match(CMD_RE) || [])[1] || ''
@@ -79,22 +82,52 @@ export class MhydpsBuild extends plugin {
       return true
     }
 
-    const notice = [
+    // 官方面板一次只呈现一个角色，这里默认出等级最高的那个（角色名命中时通常就一个）
+    const target = result.chars[0]
+    const paintNotice = [
       result.unknown.length ? `未识别的参数：${result.unknown.join('、')}` : '',
-      result.filtered ? `已按 ${args.names.join('、')} 筛选（命中 ${result.chars.length} 个）` : '',
-      result.truncated ? `公开角色较多，仅展示前 ${result.chars.length} 个` : ''
-    ].filter(Boolean).join('　')
+      result.chars.length > 1
+        ? `该号还有 ${result.chars.length - 1} 个公开角色：${result.chars.slice(1).map(c => c.name).join('、')}（用 #DPS练度查询 <角色> 逐个查看）`
+        : '',
+      result.truncated ? `公开角色较多，仅展示等级最高的一个` : ''
+    ].filter(Boolean).join('\n')
 
-    const data = {
-      siteName: SITE_NAME,
-      title: TITLE,
-      player: result.player,
-      chars: result.chars,
-      assets: result.assets,
-      notice,
-      copyright: COPYRIGHT
+    const painted = await this.paintMiaoPanel(e, uid, target, result.rawByAvatarId?.[target.avatarId])
+    if (painted) {
+      if (paintNotice) await e.reply(paintNotice)
+      return true
     }
 
-    return await respond(e, 'build', data, () => buildText(result, TITLE))
+    // miao-plugin 不可用（或解析失败）→ 文本回退，附带一行说明
+    if (paintNotice) await e.reply(paintNotice)
+    await e.reply(`[Mhydps] 未检测到可用的 miao-plugin 面板代码，已回退文本输出\n${buildText(result, TITLE)}`)
+    return true
+  }
+
+  /**
+   * 用 miao-plugin 自己的面板代码出图
+   * @param {object} e
+   * @param {string} uid
+   * @param {object} view - buildQuery 的角色视图（取 name/avatarId）
+   * @param {object} rawAvatar - 站点返回的原始 Enka avatarInfo
+   * @returns {Promise<boolean>} 是否已出图
+   */
+  async paintMiaoPanel (e, uid, view, rawAvatar) {
+    if (!view || !rawAvatar) return false
+    try {
+      const miao = await loadMiao()
+      if (!miao) return false
+      const profile = await buildMiaoProfile(uid, rawAvatar)
+      if (!profile) return false
+      // 面板立绘用本机 ProfileImg 图库（按角色名匹配，同 UID 稳定取图）；没有图库时留空，
+      // miao 会退回它自己的官方立绘
+      const costumeSplash = fileUrl(pickProfileImage(view.name, view.avatarId))
+      const panelData = await toPanelData({ uid, profile, costumeSplash })
+      if (!panelData) return false
+      return await renderMiaoPanel(e, panelData)
+    } catch (err) {
+      logger?.error?.(`[Mhydps] miao 面板渲染失败：${err?.message || err}`)
+      return false
+    }
   }
 }

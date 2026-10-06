@@ -114,12 +114,9 @@ for (const [name, fg, bg, size, bold] of specs) {
 }
 
 // 直接落在插画上的容器必须自带垫底：半透明底在亮部插画上必然不达标。
-// .empty-hint 在共享组件里，走 --card 令牌；练度面板的两处提示条在 panel.css 里
-// （那份样式刻意照抄 miao 的固定色值），所以这里核对的是「够暗的原值」。
+// 练度面板已整页交给 miao-plugin 渲染（不在本插件的样式里），这里只剩共享组件这一处。
 const SURFACES = [
-  ['common/components.css', '.empty-hint', /var\(--card\)/],
-  ['profile/panel.css', '.panel-empty', /rgba\(0, 0, 0, 0\.4[0-9]?\)/],
-  ['profile/panel.css', '.panel-notice', /rgba\(0, 0, 0, 0\.4[0-9]?\)/]
+  ['common/components.css', '.empty-hint', /var\(--card\)/]
 ]
 for (const [file, selector, want] of SURFACES) {
   const text = fs.readFileSync(path.join(pluginRoot, 'resources', file), 'utf8')
@@ -128,12 +125,12 @@ for (const [file, selector, want] of SURFACES) {
 }
 
 // 字号可读性：正文不小于 14px（渲染时再乘 renderScale，实际像素更大）
+// 练度面板不在列表里：那一页由 miao-plugin 的模板渲染，字号归 miao 管（见 README 的取舍说明）
 for (const [dir, file] of [
   ['common', 'components.css'],
   ['common', 'base.css'],
   ['dps', 'rank.html'],
   ['dps', 'raid.html'],
-  ['dps', 'build.html'],
   ['dps', 'status.html'],
   ['dps', 'help.html']
 ]) {

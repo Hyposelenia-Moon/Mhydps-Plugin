@@ -1,5 +1,5 @@
 /**
- * 渲染实测：5 个模板都要能在真实框架渲染后端里出图，且模板里的资源/头像路径必须能解析到文件
+ * 渲染实测：4 个模板都要能在真实框架渲染后端里出图，且模板里的资源/头像路径必须能解析到文件
  *
  * 这条是「路径层级」的守门人：框架把 HTML 写到 `temp/html/Mhydps-Plugin/dps/<tpl>/<saveId>.html`，
  * `components/render.js` 里的 `../../../../../../` 少一层就会 CSS 全丢、头像全裂，但**渲染不会报错**。
@@ -36,7 +36,6 @@ const { cacheInfo, getCounts } = await import(mod('model/TeamStore.js'))
 const { avatarStats } = await import(mod('model/AvatarStore.js'))
 const { helpCfg, helpList } = await import(mod('resources/help/help-cfg.js'))
 const { versions } = await import(mod('model/CharacterIndex.js'))
-const { prepareSharedAssets } = await import(mod('model/PanelAssets.js'))
 const { COPYRIGHT, SITE_NAME, formatTime, agoText } = await import(mod('components/constants.js'))
 const { pluginVersion, yunzaiVersion, versionText } = await import(mod('components/pluginVersion.js'))
 
@@ -151,34 +150,6 @@ if (raid.html) {
   check('raid：已移除行尾视频列', !raid.html.includes('rank-side') && !raid.html.includes('video-mark'))
 }
 
-// ---- build：练度面板（照 miao profile-detail 的版式） ----
-const buildData = {
-  siteName: SITE_NAME,
-  title: '#DPS练度查询',
-  player: readPlayer(enka),
-  chars: enka.avatarInfoList.map(buildCharView),
-  assets: prepareSharedAssets(),
-  notice: '已按 胡桃 筛选（命中 1 个）',
-  copyright: COPYRIGHT
-}
-const build = await renderOnce('build', buildData, 'test-build')
-check('build 出图成功', Boolean(build.img), build.err)
-if (build.html) {
-  checkRefs(build.html, path.dirname(path.join(appRoot, 'temp', 'html', 'Mhydps-Plugin', 'dps', 'build', 'x.html')), 'build', /(?:href|src)="([^"]+)"/g)
-  check('build：渲染了玩家与角色', build.html.includes('测试玩家') && build.html.includes('胡桃'))
-  check('build：渲染了面板数值', build.html.includes('54.2%'))
-  check('build：渲染了圣遗物', build.html.includes('魔女的炎之花'))
-  check('build：渲染了武器与武器面板', build.html.includes('护摩之杖') && build.html.includes('基础攻击'))
-  check('build：面板样式表已挂上', build.html.includes('profile/panel.css'))
-  check('build：一屏一角色（panel-card 数量与角色数一致）', (build.html.match(/class="panel-card"/g) || []).length === buildData.chars.length)
-  check('build：天赋改成三枚圆徽章', (build.html.match(/class="talent-icon"/g) || []).length >= 3 && build.html.includes('普攻'))
-  check('build：命座 6 枚圆图标（未解锁置灰）', (build.html.match(/class="talent-icon off"/g) || []).length >= 1)
-  check('build：属性行带 miao 的图标类名', /class="i-(hp|atk|def|mastery|cpct|cdmg|recharge)"/.test(build.html))
-  check('build：筛选提示行已渲染', build.html.includes('已按 胡桃 筛选'))
-  check('build：整页插画底与内容条仍在', build.html.includes('bg-build.jpg') && build.html.includes('head-card') && build.html.includes('foot-card'))
-  check('build：不含 miao 的伤害计算区块（站点没有该数据）', !build.html.includes('dmg-cont') && !build.html.includes('伤害计算') && !build.html.includes('期望伤害'))
-}
-
 // ---- status ----
 const statusData = {
   siteName: SITE_NAME,
@@ -246,19 +217,18 @@ const varUses = (compCss.match(/var\(--/g) || []).length
 check('组件样式全部走变量着色', varUses >= 40, `${varUses} 处`)
 
 const templateColors = []
-for (const f of ['help.html', 'rank.html', 'raid.html', 'build.html', 'status.html']) {
+for (const f of ['help.html', 'rank.html', 'raid.html', 'status.html']) {
   const text = fs.readFileSync(path.join(pluginRoot, 'resources', 'dps', f), 'utf8')
   const hits = text.match(/#[0-9a-fA-F]{3,8}\b|rgba?\(/g)
   if (hits) templateColors.push(`${f}:${hits.join('/')}`)
 }
 check('模板内不写死颜色（全部走变量）', templateColors.length === 0, templateColors.join(' | '))
 
-// 练度面板是唯一的例外：版式与配色逐条照抄 miao-plugin 的 profile-detail，
-// 色值集中在 resources/profile/panel.css（模板本身仍不写颜色）。
-const panelCss = fs.readFileSync(path.join(pluginRoot, 'resources', 'profile', 'panel.css'), 'utf8')
-check('练度面板样式表存在且带照抄说明', panelCss.includes('miao-plugin') && panelCss.length > 2000, `${panelCss.length} 字节`)
-check('练度面板样式表刻意保留 miao 的原色值', panelCss.includes('#ffe699') && panelCss.includes('rgba(50, 50, 50, 0.4)'))
-check('练度面板不在共享组件里（不污染其它页面）', !compCss.includes('.panel-card') && !baseCss.includes('.panel-card'))
+// 练度面板整页由 miao-plugin 的模板渲染（apps/build.js → model/MiaoBridge.js），
+// 所以本插件里既不该有它的模板，也不该有它的样式。
+check('本插件不再自带练度面板模板/样式（交给 miao）', !fs.existsSync(path.join(pluginRoot, 'resources', 'dps', 'build.html')) &&
+  !fs.existsSync(path.join(pluginRoot, 'resources', 'profile', 'panel.css')))
+check('练度页底图已删除（面板自带立绘，不需要整页背景）', !fs.existsSync(path.join(pluginRoot, 'resources', 'common', 'bg-build.jpg')))
 
 // ---- 字体：原神字体随包分发（不联网下载），数字走提瓦特数字 ----
 check('声明了原神中文字体 YS（汉仪文黑）', /@font-face\s*\{[^}]*font-family:\s*'YS'/s.test(baseCss))
@@ -275,15 +245,15 @@ check('字体文件非空（>1KB）', fontUrls.every(u => {
 }))
 
 const fontHardcode = []
-for (const f of ['help.html', 'rank.html', 'raid.html', 'build.html', 'status.html']) {
+for (const f of ['help.html', 'rank.html', 'raid.html', 'status.html']) {
   const text = fs.readFileSync(path.join(pluginRoot, 'resources', 'dps', f), 'utf8')
   if (/font-family/.test(text)) fontHardcode.push(f)
 }
 check('模板不硬编码字体（统一由 base.css 决定）', fontHardcode.length === 0, fontHardcode.join(','))
 
-// ---- 五张图都铺了整页插画底（渲染产物里能看到各自的 page-bg 与底图名） ----
-const renderedPages = { rank, raid, build, status, help }
-const bgFiles = { rank: 'bg-rank.jpg', raid: 'bg-raid.jpg', build: 'bg-build.jpg', status: 'bg-status.jpg', help: 'bg-help.jpg' }
+// ---- 四个自绘页面都铺了整页插画底（练度面板整页由 miao-plugin 渲染，不在此列） ----
+const renderedPages = { rank, raid, status, help }
+const bgFiles = { rank: 'bg-rank.jpg', raid: 'bg-raid.jpg', status: 'bg-status.jpg', help: 'bg-help.jpg' }
 for (const [name, page] of Object.entries(renderedPages)) {
   check(`${name}：整页插画底已铺上（${bgFiles[name]}）`, Boolean(page.html) && page.html.includes(bgFiles[name]) && page.html.includes('class="page-bg"'))
 }
@@ -293,7 +263,7 @@ const scaled = await renderOnce('rank', { ...rankData, renderScale: 2 }, 'test-r
 check('模板 body 上的 zoom 来自配置', /zoom:\s*1\.5/.test(scaled.html), scaled.html.match(/zoom:[^"]*/)?.[0] || scaled.err)
 
 // ---- 产物落盘（便于人工看效果） ----
-check('渲染产物已保存到 test/.test-tmp/render/', fs.readdirSync(outDir).length >= 5, fs.readdirSync(outDir).join(','))
+check('渲染产物已保存到 test/.test-tmp/render/', fs.readdirSync(outDir).length >= 4, fs.readdirSync(outDir).join(','))
 
 // 清理：只删本次创建的假立绘，不动真实缓存
 if (!hadAvatar) {

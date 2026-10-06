@@ -103,13 +103,15 @@ config/config.yaml.example  ← 参考默认值（入库，首次启动自动复
 
 ### 练度面板（`#DPS练度查询`）
 
-- 版式照 miao-plugin（AxiuCN 版）的 `profile-detail`：一屏一角色（600px 卡）→ 立绘铺满 + 右侧名字/等级/命座 → 三枚天赋圆徽章 → 属性表（交错暗行 + `i-*` 图标）→ 6 枚命座圆图标 → 5 张圣遗物卡 + 武器卡（含被动文案）。改版式时对照 `plugins/miao-plugin/resources/character/profile-detail.{html,css}`，不要凭印象改。
-- **不要搬 miao 面板底部那块「伤害计算」表**（`dmg-cont` / `dmg-list` / `dmg-idx` 那一套）：它依赖 miao 自己的伤害计算模块与敌人参数，站点数据里没有对应字段，搬过来只能得到空表或编造数字。面板到「武器卡 + 圣遗物卡」为止；`i-cdmg`（暴击伤害属性行）是站点面板字段，保留。这条由 `panel-assets` 与 `render-templates` 两个套件守门。
-- 面板素材（图库立绘 / 命座 / 武器 / 圣遗物图标 / 武器文案 / 属性图标雪碧图）全部走 `model/PanelAssets.js`：**只读引用本机已安装的 ProfileImg 图库与 miao-plugin，绝不入库**（图库 300MB+ 且禁止商用，本插件是 GPL 仓库）。
-- 目录探测顺序固定为「环境变量 `MHYDPS_PROFILE_IMG` / `MHYDPS_MIAO_RES` → 配置 `profileImgDir` / `miaoResDir` → 本机默认路径」；**任何素材缺失都必须降级而不是抛错**：立绘退回官方立绘 → 站点立绘 → 空（模板不裂图），图标缺失整块不渲染。
-- 素材按需复制到 `data/panel/`（gitignore），文件名带 `avatarId` 以保持同一角色每次同一张图；改选图规则时同步 `test/panel-assets.test.mjs`。
-- 面板页**不做对比度守门**（miao 的文字直接压在立绘上），这是明确接受的取舍；`test/contrast.test.mjs` 只保留「直接落在插画上的容器必须自带足够暗的垫底」这一条底线。
-- `#DPS练度查询` 支持带角色名筛选（`parseBuildArgs` → `pickAvatarsByNames`）：角色名/别名经角色表解析成 `avatarId` 再过滤；**关键词全都不是角色名时不当作筛选**（原样出全部 + 一行「未识别的参数」），命中角色名但该号没有该角色才算筛选落空。
+- **练度面板整页复用 miao-plugin（AxiuCN 版）的代码，本插件不自绘**：`apps/build.js` 取数（站点 Enka 代理）→ `model/MiaoBridge.js` 用 miao 的 `EnkaData` / `Avatar` / `Attr` / `ArtisMark` 建面板模型 → 调 miao 的 `Common.render('character/profile-detail', ...)` 出图（模板、样式、图标、布局、缩放全是 miao 的）。
+- **不要在本插件里重新实现面板**：模板/样式/评分/词条权重都不要抄一份（抄了就会像 v1 那样在「站点缺 `flat.name`、天赋缺位次」时出错）。要改观感请改 miao-plugin 或给它提 issue；本插件只决定「喂什么数据」与「用哪张立绘」。
+- 关键收益：名字与图标由 miao 按 **itemId** 反查它的静态表，站点 Enka 数据缺 `flat.name`（新角色/新武器常见）也能正常显示；面板数值与圣遗物评分也由 miao 现算。
+- **不渲染「伤害计算」表**：`toPanelData` 固定传 `dmgCalc.dmgData = []`，靠 miao 模板里的 `{{if dmgData?.length > 0}}` 跳过；不要为了让表出现去接 miao 的 `ProfileDmg`/`calcDmg`。由 `miao-bridge` 套件守门。
+- 立绘走 `model/ProfileImg.js`：只读引用本机 ProfileImg 图库（**不入库**，300MB+ 且禁止商用），按角色名匹配、按 `avatarId` 稳定取图；没有图库或没收录该角色时传空串，miao 会退回它自己的官方立绘。
+- 桥接的硬约束：miao 的代码假设 **cwd = bot 根**；我们用一个独立 `Player` 实例（uid 加 `mhydps-` 前缀）承载解析结果并**从不调用 `save()`**，避免污染 miao 自己的 PlayerData 缓存与内存实例。
+- miao-plugin 缺失或解析失败 → 回退本插件的纯文本（`buildText`）；纯文本里的天赋等级仍是本站启发式，口径差异写在 README。
+- 面板页**不做对比度守门**（miao 的文字直接压在立绘上），这是明确接受的取舍；`test/contrast.test.mjs` 只扫本插件自己的 4 个页面。
+- `#DPS练度查询` 支持带角色名筛选（`parseBuildArgs` → `pickAvatarsByNames`）：角色名/别名经角色表解析成 `avatarId` 再过滤；**关键词全都不是角色名时不当作筛选**（原样出全部 + 一行「未识别的参数」），命中角色名但该号没有该角色才算筛选落空。面板一张图一个角色，默认出等级最高的那个。
 
 ### 日志与注释
 

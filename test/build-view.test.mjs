@@ -101,12 +101,10 @@ check('基础攻击力标签', weaponStatLabel('FIGHT_PROP_BASE_ATTACK') === '�
 check('武器基础攻击取整', weapon.attrs[0].value === '608', weapon.attrs[0].value)
 check('武器副词条 0~1 小数转百分比', weaponStatText('FIGHT_PROP_CRITICAL_HURT', 0.662) === '66.2%', weaponStatText('FIGHT_PROP_CRITICAL_HURT', 0.662))
 check('武器副词条沿用面板词条标签', weapon.attrs[1].label === '暴击伤害', weapon.attrs[1].label)
-check('本机没装 miao 时武器文案为 null（模板整块不渲染）', weapon.detail === null)
 
-// ---- 面板素材字段（本机没装图库/miao 时全为空串，模板整体降级） ----
-check('视图带 panel 素材字段', view.panel && typeof view.panel.bg === 'string' && view.panel.cons.length === 6)
-check('命座素材点亮状态按命座数', view.panel.cons.filter(c => c.on).length === view.constellation)
-check('面板属性带图标类名', view.stats.every(s => /^i-/.test(s.icon)), view.stats.map(s => s.icon).join(','))
+// ---- 视图字段：面板出图交给 miao（model/MiaoBridge.js），这里只保证文本回退够用 ----
+check('视图带角色 id 与元素（面板立绘按角色名取图、文本回退要显示元素）', /^\d+$/.test(view.avatarId) && view.element === 'Pyro', `${view.avatarId}/${view.element}`)
+check('文本回退需要的面板数值齐全（7 项）', view.stats.length === 7)
 
 // ---- 按角色名筛选（`#DPS练度查询 胡桃`） ----
 let picked = pickAvatarsByNames(sample.avatarInfoList, ['胡桃'])
@@ -137,12 +135,12 @@ const offline = (names) => queryBuild('100000000', {
 
 const all = await offline([])
 check('queryBuild：全部角色按等级降序', all.chars.length === 2 && all.chars[0].name === '胡桃', all.chars.map(c => c.name).join(','))
-check('queryBuild：带共用素材字段（未装 miao 时为空串）', all.assets && ['cardBg', 'star', 'icons'].every(k => typeof all.assets[k] === 'string'), JSON.stringify(all.assets))
+check('queryBuild：回传原始 Enka 数据（面板出图给 miao 用）', Object.keys(all.rawByAvatarId).length === 2 && all.rawByAvatarId[hutao.avatarId]?.propMap, Object.keys(all.rawByAvatarId).join(','))
 check('queryBuild：不筛选时 filtered=false 且名单齐全', all.filtered === false && all.roster.length === 2, all.roster.join(','))
-check('queryBuild：每个角色都有 panel 素材结构', all.chars.every(c => c.panel && c.panel.cons.length === 6))
 
 const only = await offline(['胡桃'])
 check('queryBuild：按角色筛选只留命中项', only.filtered === true && only.chars.length === 1 && only.chars[0].name === '胡桃')
+check('queryBuild：筛选后只回传命中角色的原始数据', only.rawByAvatarId && Object.keys(only.rawByAvatarId).length === 1, Object.keys(only.rawByAvatarId || {}).join(','))
 check('queryBuild：筛掉的角色不计入 total', only.total === 2 && only.matched === 1, `total=${only.total} matched=${only.matched}`)
 
 const miss = await offline(['不存在的角色'])

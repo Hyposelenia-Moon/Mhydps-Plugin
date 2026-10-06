@@ -27,17 +27,21 @@ proxy: 'http://<代理主机>:<端口>'
 
 首次使用可以直接发查询命令（会自动拉取），也可以由主人执行 `#DPS更新` 立即拉取。
 
-### 练度面板的可选素材（不装也能用）
+### 练度面板：整页复用 miao-plugin 的代码（需要装 miao-plugin）
 
-练度查询的面板版式照 [miao-plugin](https://github.com/AxiuCN/miao-plugin)（AxiuCN 版）的 `profile-detail`，素材**全部只读引用本机已装好的目录，不随本插件分发**（图库 300MB+ 且其 README 明确禁止商用）：
+练度查询的**画面完全由 [miao-plugin](https://github.com/AxiuCN/miao-plugin)（AxiuCN 版）自己的代码产出**——本插件不自绘面板：
 
-| 素材 | 来源 | 缺失时的表现 |
-|------|------|--------------|
-| 面板立绘（fan art） | [AxiuCN/miao-plugin-ProfileImg](https://github.com/AxiuCN/miao-plugin-ProfileImg)，即 `plugins/ProfileImg-Plugin/resources/gallery/ProfileImg/miao-plugin-ProfileImg`（或用 `profileImgDir` 指到别处） | 退回 miao 的官方立绘 → 站点 30KB 立绘 → 纯色头图 |
-| 命座图标 / 武器图标 / 圣遗物图标 / 武器文案 | 本机 `plugins/miao-plugin/resources`（或用 `miaoResDir` 指到别处） | 对应图标与文案整块不显示，版式不变、不裂图 |
-| 属性图标 / 卡片底纹 / 星级 | 同上（miao-plugin，MIT 许可） | 属性行只显示文字，卡片用纯色底 |
+| 环节 | 谁负责 |
+|------|--------|
+| 取数 | 本插件（站点 `/api/enka/uid/<uid>` 代理的 Enka 数据） |
+| Enka → 面板模型（武器/圣遗物**按 itemId 反查名字与图标**、天赋、面板数值、圣遗物评分与词条权重） | miao 的 `models/serv/api/EnkaData.js` + `models/Avatar.js` + `Attr` / `ArtisMark` |
+| 模板、样式、图标、布局、截图 | miao 的 `resources/character/profile-detail.html/.css`（经 miao 的 `Common.render`） |
+| 面板立绘 | 本插件从 [AxiuCN/miao-plugin-ProfileImg](https://github.com/AxiuCN/miao-plugin-ProfileImg) 图库按**角色名**选一张（同一 UID 稳定取图）；图库没装或没收录该角色时，退回 miao 自己的官方立绘 |
 
-素材按需复制到 `<插件根>/data/panel/`（gitignore 的缓存目录），同一个角色每次渲染选同一张立绘（按 UID 哈希稳定取图）。命令里给了角色名时只渲染这些角色的面板。
+- 因为名字与图标都由 miao 按 **itemId** 解析，站点 Enka 数据缺 `flat.name` 的新角色/新武器也能正常显示。
+- **不渲染 miao 面板底部的「伤害计算」表**（`dmgCalc.dmgData` 传空）：那块依赖 miao 的伤害计算模块与敌人参数，本次按需求排除。
+- 未安装 miao-plugin 时练度查询**回退纯文本**输出（其它命令不受影响）。
+- 图库（300MB+，其 README 明确「严禁商用」）**不随本插件分发**，只按路径只读引用；可用 `profileImgDir` 指定位置。
 
 ## 更新
 
@@ -67,8 +71,8 @@ cd <bot根>/plugins/Mhydps-Plugin && git pull
 | `#DPS危战榜 玛薇卡 金≤4 -p2` | 版本/首领/角色/金数/翻页可任意组合 |
 | `#DPS榜视频 3` | 发第 3 名的 B 站视频链接（站点每条记录都有投稿视频作证据）；可带榜单的全部筛选，如 `#DPS榜视频 1 胡桃 12金` |
 | `#DPS危战榜视频 3` | 危战榜第 3 名的视频链接；可带 `版本:` / `首领:` 等筛选 |
-| `#DPS练度查询 <9位UID>` | 该号公开角色（最多 6 个，一屏一角色）：面板、武器与圣遗物明细（Enka），面板版式照 miao-plugin |
-| `#DPS练度查询 <角色>` | 只看指定角色（如 `#DPS练度查询 胡桃`），支持别名（`桃`）；UID 取配置 `defaultUid` |
+| `#DPS练度查询 <9位UID>` | 该号等级最高角色的面板（一张图一个角色，画面由 miao-plugin 渲染） |
+| `#DPS练度查询 <角色>` | 指定角色（如 `#DPS练度查询 胡桃`），支持别名（`桃`）；UID 取配置 `defaultUid` |
 | `#DPS练度查询 <角色> <UID>` | 角色名与 UID 顺序随意、可写多个角色（`胡桃 夜兰`，顿号分隔也行） |
 | `#练度查询 <9位UID>` | 同上，省略 `DPS` 前缀 |
 | `#DPS状态` | 缓存时间、数据条数、立绘缓存、当前代理 |
@@ -92,7 +96,8 @@ cd <bot根>/plugins/Mhydps-Plugin && git pull
 | `avatarEnabled` | true | 是否缓存并渲染角色立绘，关闭后以角色名文字占位 |
 | `defaultUid` | 空 | 练度查询的默认 UID：填了就能直接 `#DPS练度查询 胡桃` |
 | `profileImgDir` | 空 | 面板立绘图库根目录（含 `normal-character` 那一层），留空 = 自动探测 |
-| `miaoResDir` | 空 | miao-plugin 的 `resources` 目录（面板图标/武器文案来源），留空 = 自动探测 |
+| `miaoPluginDir` | 空 | miao-plugin 目录（练度面板整页复用它的代码），留空 = 自动探测 `plugins/miao-plugin` |
+| `miaoResDir` | 空 | miao-plugin 的 `resources` 目录（用于反推插件位置），一般不用填 |
 
 ## 渲染与字体
 
@@ -102,17 +107,22 @@ cd <bot根>/plugins/Mhydps-Plugin && git pull
   - `HYWH-65W.woff` —— 汉仪文黑-65W，原神标准中文，作正文主字体
   - `tttgbnumber.woff/.ttf` —— 提瓦特数字，作阿拉伯数字字体（字体栈里排在第一位，数字自动命中它）
 - 字体在 `base.css` 用 `@font-face` 声明（`url("./font/...")` 相对 CSS 文件），模板不写 `font-family`；改字体只需替换字体文件与这段声明。
-- **五张图各有整页插画底**：`bg-rank.jpg` / `bg-raid.jpg` / `bg-build.jpg`（取自哥伦比娅3）+ `bg-help.jpg` / `bg-status.jpg`（取自哥伦比娅4），统一走 `--scrim` 压暗 + `--card` 内容条。
+- **四个自绘页面各有整页插画底**：`bg-rank.jpg` / `bg-raid.jpg`（取自哥伦比娅3）+ `bg-help.jpg` / `bg-status.jpg`（取自哥伦比娅4），统一走 `--scrim` 压暗 + `--card` 内容条。
   - 为什么用内容条：文字直接压插画时，小字必须把插画洗到极淡才达标（实测 help 暗部 `#4b315c`，深色小字仅 1.9:1）；改成「插画 + 深色内容条」后插画保持清晰、文字以内容条为对比基准，两边都不妥协。
   - 对比度由 `test/contrast.test.mjs` 按令牌现算守门（最坏情况按纯白插画推）；换底图或调色后必须跑它，重新生成底图见 `tool/background/README.md`。
   - 页面四周只留 8~10px 画面边框（`body` / `.page-inner` 的 padding），卡片内边距 10px 上下：留边越小，同样图宽能放下的内容越多。
 - 榜单行按站点层级排版：名次徽章 → 4 个描金圆环头像（右上角圆形命座数字）→ 大号伤害数字 → 金数（27px）→ 标签（18px）。**行尾不再有视频列**——视频证据统一用 `#DPS榜视频 <名次>` 指令取链接。
 - 榜单**不显示元素标签**（火/水/冰…）——那是站点榜单里没有的信息；元素只在 `#DPS练度查询` 的角色卡上出现。
 - **视频证据**：站点每条记录都带 `video_url`（B 站投稿）。榜单图**不放视频列**（那只是每行一个重复标记，占宽且无信息量）；要拿链接用 `#DPS榜视频 <名次>` / `#DPS危战榜视频 <名次>`，名次就是图里的编号（跨页连续、与筛选口径一致）。
-- **练度面板是唯一的配色例外**：`#DPS练度查询` 的版式与配色逐条照抄 miao-plugin 的 `profile-detail`（`#fff` 文字 + 交错暗行 + `#ffe699` 高亮），色值集中在 `resources/profile/panel.css`，模板本身仍不写颜色。
-  - 代价：miao 的文字直接压在立绘上、靠 `text-shadow` 辨认，亮色立绘上的小字达不到 WCAG AA，所以**练度面板不做对比度守门**（其余四页照旧受 `test/contrast.test.mjs` 约束）。
-  - 想让它更稳：把 `panel.css` 里的 `.panel-basic::after` 那层暗角加深即可，代价是立绘变暗。
-  - **不搬 miao 面板底部那块「伤害计算」表**：它依赖 miao 自己的伤害计算模块与敌人参数，本站数据里没有对应字段，所以面板到「武器卡 + 圣遗物卡」为止（暴击伤害只是属性行的一项，保留）。
+- **练度面板不参与这套配色守门**：`#DPS练度查询` 的整页画面由 miao-plugin 的模板与样式渲染
+  （`apps/build.js` → `model/MiaoBridge.js`），本插件的模板/样式里没有它的色值，也不再为它生成整页背景图。
+- 榜单行按站点层级排版：名次徽章 → 4 个描金圆环头像（右上角圆形命座数字）→ 大号伤害数字 → 金数（27px）→ 标签（18px）。**行尾不再有视频列**——视频证据统一用 `#DPS榜视频 <名次>` 指令取链接。
+- 榜单**不显示元素标签**（火/水/冰…）——那是站点榜单里没有的信息；元素只在 `#DPS练度查询` 的角色卡上出现。
+- **视频证据**：站点每条记录都带 `video_url`（B 站投稿）。榜单图**不放视频列**（那只是每行一个重复标记，占宽且无信息量）；要拿链接用 `#DPS榜视频 <名次>` / `#DPS危战榜视频 <名次>`，名次就是图里的编号（跨页连续、与筛选口径一致）。
+- **练度面板不参与这套配色守门**：`#DPS练度查询` 的整页画面由 miao-plugin 的模板与样式渲染
+  （`apps/build.js` → `model/MiaoBridge.js`），本插件的模板/样式里没有它的色值，也不再为它生成整页背景图。
+  - 面板文字压在立绘上、靠 `text-shadow` 辨认，这是 miao 的既有取舍；受影响的只有练度这一页，其余四页照旧受 `test/contrast.test.mjs` 约束。
+  - **不渲染 miao 面板底部的「伤害计算」表**：`dmgCalc.dmgData` 传空数组，miao 模板里的 `{{if dmgData?.length > 0}}` 自然跳过（该表依赖 miao 的伤害计算模块与敌人参数）。
 
 ## 数据来源与口径
 | 展示项 | 站点字段 | 口径说明 |
@@ -129,11 +139,11 @@ cd <bot根>/plugins/Mhydps-Plugin && git pull
 **已知与站点前端的差异**（如实说明，不掩盖）：
 
 1. 站点前端还会按「砺行修远送的命座算不算金」「常驻角色是否扣金」在**界面上**二次调整金数，并有一个 `cost<16` 时的 +1 规则。本插件只展示站点存储的三个原始字段（总/限定/常驻），不复刻这套前端调整。
-2. 站点「练度查询」自带一套**专有评分**（按角色配置有效词条再加权，见站点前端 bundle）。本插件不复刻评分（也不做圣遗物的 `xx分/SS` 评级），只给出面板（生命/攻击/防御/精通/双暴/充能）、武器面板、5 件圣遗物主副词条与副词条条数。
-3. 天赋等级按 Enka `skillLevelMap` 键末位（1/2/3 = 普攻/战技/爆发）取每个位次键最小的一套，多形态角色可能与站点展示略有出入。
-4. 练度面板的**武器被动文案**来自本机 miao-plugin 的静态表（游戏内原文，按当前精炼档位取），站点接口里没有这段文本；同时站点的 Enka 数据里也没有原神天赋图标，所以三枚天赋徽章用「位次名 + 等级」而非图标。
-5. 面板立绘是社区 fan art（ProfileImg 图库），与站点无关；图库按**角色名**匹配，图库里没有的角色退回官方立绘/站点立绘。
-6. **面板不含「伤害计算」**：miao 那张表（伤害类型 / 暴击伤害 / 期望伤害）来自它自己的伤害计算模块与敌人参数，本站接口没有这些字段，本插件不猜也不算，面板只呈现 Enka 面板、武器、圣遗物与命座/天赋。
+2. 站点「练度查询」自带一套**专有评分**（按角色配置有效词条再加权，见站点前端 bundle）。本插件不实现评分，而是**直接用 miao-plugin 的评分/词条权重**（`ArtisMark`）——所以练度图上的 `xx分 / SS / 圣遗物总分` 是 miao 的口径，不是站点的，也不是本插件自造的。
+3. 练度页的**名字与图标**由 miao 按 `itemId` 反查它自己的静态表（`meta-gs/**`），因此不依赖站点 Enka 数据里的 `flat.name`；站点那份数据缺名字时（新角色/新武器常见）练度页依旧完整。
+4. **面板数值（生命/攻击/防御/精通/双暴/充能，含 基础+加成 拆分）与天赋等级也由 miao 计算**：本插件只把 Enka 的原始数据喂给它。文本回退里的天赋等级仍是本插件的启发式（`skillLevelMap` 键末位），与出图可能略有出入。
+5. 面板立绘是社区 fan art（ProfileImg 图库），与站点无关；图库按**角色名**匹配，图库里没有的角色退回 miao 的官方立绘。
+6. **面板不含「伤害计算」**：miao 那张表（伤害类型 / 暴击伤害 / 期望伤害）依赖它的伤害计算模块与敌人参数，本次按需求不渲染（`dmgCalc.dmgData` 传空），miao 面板的其余部分照旧。
 
 ## 数据表维护
 
@@ -150,13 +160,12 @@ cd <bot根>/plugins/Mhydps-Plugin && git pull
 Mhydps-Plugin/
 ├── index.js                 入口：初始化配置、载入磁盘缓存、动态加载 apps/
 ├── apps/                    命令入口（rank / raid / build / admin / status / help）
-├── model/                   数据层：HTTP 客户端、榜单缓存、角色索引、Enka、立绘缓存、面板素材
+├── model/                   数据层：HTTP 客户端、榜单缓存、角色索引、Enka、立绘缓存、miao 面板桥接
 ├── modules/                 业务层：参数解析、榜单查询、练度组装、文本回退
 ├── components/              配置、常量、版本号、渲染
 ├── guoba/ + guoba.support.js 锅巴配置面板
 ├── defSet/ + config/        配置三层
 ├── resources/               模板、样式、帮助配置、随包数据表
-│   └── profile/panel.css    练度面板样式（照抄 miao 配色，唯一允许写死色值的文件）
 └── test/                    回归套件（不启动 bot）
 ```
 

@@ -36,6 +36,10 @@ defaultUid: ''
 # 图库（AxiuCN/miao-plugin-ProfileImg，300MB+）需自行安装，本插件只读引用、不随包分发
 profileImgDir: ''
 
-# miao-plugin 的 resources 目录（面板图标：命座 / 武器 / 圣遗物），留空 = 自动探测
-# 自动探测 plugins/miao-plugin/resources；未安装时面板照常出图，只是不显示图标
+# miao-plugin 目录（面板出图完全复用它的模板与静态表），留空 = 自动探测
+# 依次尝试：miaoPluginDir → miaoResDir 的上级 → plugins/miao-plugin
+miaoPluginDir: ''
+
+# miao-plugin 的 resources 目录（同上，用于反推 miao-plugin 位置），留空 = 自动探测
+# 未安装 miao-plugin 时练度查询会回退纯文本输出
 miaoResDir: ''

@@ -28,7 +28,8 @@ const defaultConfig = {
   avatarEnabled: true,
   defaultUid: '',
   profileImgDir: '',
-  miaoResDir: ''
+  miaoResDir: '',
+  miaoPluginDir: ''
 }
 
 /**

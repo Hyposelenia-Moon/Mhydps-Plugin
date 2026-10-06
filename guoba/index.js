@@ -5,7 +5,7 @@
  *   mhydps_priority, mhydps_renderScale,
  *   mhydps_proxy, mhydps_timeoutMs,
  *   mhydps_cacheTtlMinutes, mhydps_pageSize, mhydps_avatarEnabled,
- *   mhydps_defaultUid, mhydps_profileImgDir, mhydps_miaoResDir
+ *   mhydps_defaultUid, mhydps_profileImgDir, mhydps_miaoPluginDir, mhydps_miaoResDir
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -37,6 +37,7 @@ const TEMPLATE_VARS = {
   avatarEnabled: 'mhydps_avatarEnabled',
   defaultUid: 'mhydps_defaultUid',
   profileImgDir: 'mhydps_profileImgDir',
+  miaoPluginDir: 'mhydps_miaoPluginDir',
   miaoResDir: 'mhydps_miaoResDir'
 }
 
@@ -51,6 +52,7 @@ const DEFAULTS = {
   mhydps_avatarEnabled: 'true',
   mhydps_defaultUid: '',
   mhydps_profileImgDir: '',
+  mhydps_miaoPluginDir: '',
   mhydps_miaoResDir: ''
 }
 
@@ -183,10 +185,19 @@ export function supportGuoba () {
           componentProps: { placeholder: '留空 = 自动探测' }
         },
         {
+          field: 'miaoPluginDir',
+          label: 'miao-plugin 目录',
+          helpMessage: '练度面板完全复用 miao-plugin 的模板与静态表，这里指定它的目录',
+          bottomHelpMessage: '留空自动探测 plugins/miao-plugin。未安装时练度查询回退纯文本输出（面板图需要它）',
+          component: 'Input',
+          required: false,
+          componentProps: { placeholder: '留空 = 自动探测' }
+        },
+        {
           field: 'miaoResDir',
-          label: 'miao-plugin 资源目录',
-          helpMessage: '面板图标（命座/武器/圣遗物）来源，留空 = 自动探测',
-          bottomHelpMessage: '自动探测 plugins/miao-plugin/resources。没装 miao-plugin 时面板照常出图，只是不显示图标',
+          label: 'miao-plugin 资源目录（可选）',
+          helpMessage: '同上，用于反推 miao-plugin 位置',
+          bottomHelpMessage: '一般不用填；填了 miaoPluginDir 或按默认路径装好插件即可',
           component: 'Input',
           required: false,
           componentProps: { placeholder: '留空 = 自动探测' }
@@ -205,6 +216,7 @@ export function supportGuoba () {
           avatarEnabled: cfg.avatarEnabled ?? true,
           defaultUid: cfg.defaultUid ?? '',
           profileImgDir: cfg.profileImgDir ?? '',
+          miaoPluginDir: cfg.miaoPluginDir ?? '',
           miaoResDir: cfg.miaoResDir ?? ''
         }
       },

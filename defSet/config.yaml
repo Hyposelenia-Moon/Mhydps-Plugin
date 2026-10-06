@@ -33,5 +33,8 @@ defaultUid: "${mhydps_defaultUid}"
 #              → plugins/miao-plugin/resources/profile
 profileImgDir: "${mhydps_profileImgDir}"
 
-# miao-plugin 的 resources 目录（面板图标来源），留空 = 自动探测 plugins/miao-plugin/resources
+# miao-plugin 目录（练度面板完全复用它的模板与静态表），留空 = 自动探测 plugins/miao-plugin
+miaoPluginDir: "${mhydps_miaoPluginDir}"
+
+# miao-plugin 的 resources 目录（同上，用于反推插件位置），留空 = 自动探测
 miaoResDir: "${mhydps_miaoResDir}"
