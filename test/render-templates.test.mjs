@@ -34,7 +34,7 @@ const { buildCharView } = await import(mod('modules/buildQuery.js'))
 const { readPlayer } = await import(mod('model/EnkaClient.js'))
 const { cacheInfo, getCounts } = await import(mod('model/TeamStore.js'))
 const { avatarStats } = await import(mod('model/AvatarStore.js'))
-const { helpCfg, helpList, quickStart } = await import(mod('resources/help/help-cfg.js'))
+const { helpCfg, helpList } = await import(mod('resources/help/help-cfg.js'))
 const { versions } = await import(mod('model/CharacterIndex.js'))
 const { COPYRIGHT, SITE_NAME, formatTime, agoText } = await import(mod('components/constants.js'))
 const { pluginVersion, yunzaiVersion, versionText } = await import(mod('components/pluginVersion.js'))
@@ -188,10 +188,9 @@ if (status.html) {
 
 // ---- help ----
 const helpData = {
-  siteName: SITE_NAME,
   helpCfg,
-  quickStart,
-  helpGroup: helpList.map(g => ({ group: g.group, list: g.list })),
+  helpGroup: helpList.map(g => ({ group: g.group, list: g.list.map(i => ({ title: i.title, desc: i.desc })) })),
+  versionText,
   copyright: COPYRIGHT
 }
 const help = await renderOnce('help', helpData, 'test-help')
@@ -199,14 +198,15 @@ check('help 出图成功', Boolean(help.img), help.err)
 if (help.html) {
   checkRefs(help.html, path.dirname(path.join(appRoot, 'temp', 'html', 'Mhydps-Plugin', 'dps', 'help', 'x.html')), 'help', /(?:href|src)="([^"]+)"/g)
   check('help：渲染了指令条目', help.html.includes('#DPS榜') && help.html.includes('#DPS危战榜') && help.html.includes('#DPS练度查询'))
-  check('help：渲染了快速上手卡', help.html.includes('快速上手') && help.html.includes('quick-cmd'))
-  check('help：渲染了参数速查', help.html.includes('quick-note-label') && help.html.includes('金数筛选'))
-  check('help：渲染了分组序号', help.html.includes('help-index'))
-  check('help：渲染了参数表', help.html.includes('help-args') && help.html.includes('参数') && help.html.includes('取值'))
-  check('help：参数表内容来自配置', help.html.includes('角色名或别名') && help.html.includes('总金 = 限定金 + 常驻金'))
-  check('help：渲染了示例', help.html.includes('help-example') && help.html.includes('#DPS榜 火神 12金 主C'))
-  // art-template 默认转义尖括号（实体形式随版本而异，两种都认）
-  check('help：示例中的尖括号被转义而非当标签', /(&#60;|&lt;)9位UID(&#62;|&gt;)/.test(help.html))
+  check('help：分组标题条数量与配置一致', (help.html.match(/class="help-group"/g) || []).length === helpList.length, `${helpList.length} 组`)
+  check('help：使用三列网格', help.html.includes('class="help-grid"') || help.html.includes('help-grid cols-'))
+  check('help：条目含命令与说明', help.html.includes('entry-cmd') && help.html.includes('entry-desc'))
+  check('help：说明文案来自配置', help.html.includes('只看无宏、无连点的记录'))
+  check('help：页头有版本行', help.html.includes('hero-plugin') && help.html.includes('Mhydps-Plugin 1.0.0'))
+  check('help：无背景图时回落渐变', help.html.includes('help-hero') && !help.html.includes('has-bg'))
+  check('help：不再渲染参数表/快速上手/示例块', !help.html.includes('help-args') && !help.html.includes('快速上手') && !help.html.includes('help-example'))
+  // 尖括号 placeholder 会被 art-template 转义（实体形式随版本而异，两种都认）
+  check('help：示例中的尖括号被转义而非当标签', /(&#60;|&lt;)UID(&#62;|&gt;)/.test(help.html))
 }
 
 // ---- 白底主题：配色只在 base.css 的变量块里，模板与组件不写死色值 ----

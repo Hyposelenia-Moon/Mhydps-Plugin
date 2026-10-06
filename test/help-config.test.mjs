@@ -1,71 +1,54 @@
 /**
- * 帮助配置：结构契约
+ * 帮助配置：结构契约（紧凑版式）
  *
- * help-cfg.js 是热重载文件（apps/help.js 每次动态 import），结构错了不会报错，
- * 只会让帮助图少一块内容；这里把「字段齐全、语法与示例可读、参数表完整、权限分组」钉住。
+ * 帮助图按「分组标题条 + 三列网格」渲染，每项只有命令与一行说明。
+ * 这里钉住三件事：字段极简（不回流成语法块/参数表）、排版可容纳（标题与说明不过长）、
+ * 命令覆盖齐全且不重复——帮助与插件命令漂移时直接报红。
  */
 import { checker, mod } from './_helper.mjs'
 
 const { check, finish } = checker()
 
-const { helpCfg, quickStart, helpList } = await import(mod('resources/help/help-cfg.js'))
+const { helpCfg, helpList } = await import(mod('resources/help/help-cfg.js'))
 
 // ---- 页头 ----
 check('helpCfg 有标题', typeof helpCfg.title === 'string' && helpCfg.title.includes('#DPS'))
 check('helpCfg 有副标题', typeof helpCfg.subTitle === 'string' && helpCfg.subTitle.length > 0)
 
-// ---- 快速上手卡 ----
-check('quickStart 存在', Boolean(quickStart) && typeof quickStart === 'object')
-check('quickStart 有标题', typeof quickStart.title === 'string' && quickStart.title.length > 0)
-check('快速上手含 3~5 条常用命令', quickStart.commands.length >= 3 && quickStart.commands.length <= 5, `${quickStart.commands.length} 条`)
-check('常用命令均为 # 开头且有说明', quickStart.commands.every(c => c.title.startsWith('#') && c.desc))
-check('参数速查非空', Array.isArray(quickStart.notes) && quickStart.notes.length > 0)
-check('参数速查每行有标签与内容', quickStart.notes.every(n => n.label && n.text))
-check('参数速查覆盖金数写法', quickStart.notes.some(n => n.text.includes('12金') || n.text.includes('金≤')))
-
 // ---- 分组与条目 ----
 check('helpList 非空', Array.isArray(helpList) && helpList.length > 0, `${helpList.length} 组`)
 check('每组有 group 名与 list', helpList.every(g => typeof g.group === 'string' && g.group && Array.isArray(g.list) && g.list.length > 0))
-check('每条有 title 与 desc', helpList.every(g => g.list.every(i => typeof i.title === 'string' && i.title && typeof i.desc === 'string' && i.desc)))
-check('命令标题以 # 开头', helpList.every(g => g.list.every(i => i.title.trim().startsWith('#'))))
 
 const items = helpList.flatMap(g => g.list)
+check('每条有 title 与 desc', items.every(i => typeof i.title === 'string' && i.title && typeof i.desc === 'string' && i.desc))
+check('命令标题以 # 开头', items.every(i => i.title.trim().startsWith('#')))
 
-// ---- 语法模板 ----
-const withSyntax = items.filter(i => i.syntax)
-check('存在带语法模板的条目', withSyntax.length >= 2, `${withSyntax.length} 条`)
-check('语法模板以 # 开头', withSyntax.every(i => i.syntax.trim().startsWith('#')))
-check('带参数表的条目必有语法', items.filter(i => i.args?.length).every(i => Boolean(i.syntax)))
+// ---- 字段极简：只有 title / desc（防止再次复杂化） ----
+const extraKeys = items.flatMap(i => Object.keys(i)).filter(k => k !== 'title' && k !== 'desc')
+check('条目只保留 title / desc 两个字段', extraKeys.length === 0, [...new Set(extraKeys)].join(','))
+check('条目里不再有语法 / 参数表 / 示例字段', items.every(i => !i.syntax && !i.args && !i.examples))
 
-// ---- 参数表 ----
-const withArgs = items.filter(i => i.args?.length)
-check('存在参数表', withArgs.length >= 2, `${withArgs.length} 条`)
-check('参数表每行字段齐全', withArgs.every(i => i.args.every(a => a.name && a.value && a.desc)))
-check('榜单命令登记了核心参数', (() => {
-  const rank = items.find(i => i.title.startsWith('#DPS榜'))
-  const names = rank.args.map(a => a.name).join('/')
-  return ['角色', '金数', '主C', '绿玩', '标签', '页N'].every(n => names.includes(n))
-})(), items.find(i => i.title.startsWith('#DPS榜')).args.map(a => a.name).join('/'))
-check('危战命令登记了版本与首领', (() => {
-  const raid = items.find(i => i.title.startsWith('#DPS危战榜'))
-  const names = raid.args.map(a => a.name).join('/')
-  return names.includes('版本') && names.includes('首领')
-})())
+// ---- 排版可容纳三列网格 ----
+check('标题长度 ≤ 30 字（三列不换行）', items.every(i => i.title.length <= 30), items.filter(i => i.title.length > 30).map(i => i.title).join(' | '))
+check('说明长度 ≤ 40 字（一行内可读）', items.every(i => i.desc.length <= 40), items.filter(i => i.desc.length > 40).map(i => i.desc).join(' | '))
+check('每组条目 ≤ 8 条', helpList.every(g => g.list.length <= 8), helpList.map(g => `${g.group}:${g.list.length}`).join(' '))
 
-// ---- 示例 ----
-const withExamples = items.filter(i => i.examples?.length)
-check('存在示例', withExamples.length >= 2, `${withExamples.length} 条`)
-check('示例以 # 开头', withExamples.every(i => i.examples.every(ex => ex.trim().startsWith('#'))))
-check('核心命令都有示例', ['#DPS榜', '#DPS危战榜', '#DPS练度查询', '#DPS更新'].every(t => items.some(i => i.title.startsWith(t) && i.examples?.length)))
+// ---- 不重复 ----
+const titles = items.map(i => i.title)
+check('命令条目不重复', new Set(titles).size === titles.length, titles.filter((t, idx) => titles.indexOf(t) !== idx).join(','))
+
+// ---- 覆盖率：插件现有命令都要在帮助里出现 ----
+const commands = ['#DPS榜', '#DPS危战榜', '#DPS练度查询', '#练度查询', '#DPS状态', '#DPS帮助', '#DPS更新']
+const missing = commands.filter(cmd => !titles.some(t => t.startsWith(cmd)))
+check('覆盖全部插件命令', missing.length === 0, missing.join(','))
 
 // ---- 权限分组 ----
 const masterGroups = helpList.filter(g => g.auth === 'master')
 check('主人分组存在且只含更新命令', masterGroups.length === 1 && masterGroups[0].list.every(i => i.title.includes('#DPS更新')))
 check('非主人分组不带 auth', helpList.filter(g => !g.auth).length === helpList.length - masterGroups.length)
 
-// ---- 覆盖面 ----
-const titles = items.map(i => i.title)
-check('覆盖四条核心命令', ['#DPS榜', '#DPS危战榜', '#DPS状态', '#DPS帮助'].every(t => titles.some(x => x.startsWith(t))), titles.length + ' 条')
-check('含练度查询（含简写）', titles.filter(t => t.includes('练度查询')).length >= 2)
+// ---- 常用写法要有具体示例条目（截图风格的「命令 + 用法」） ----
+check('榜单组含筛选与翻页写法', ['#DPS榜 金≤12', '#DPS榜 绿玩', '#DPS榜 -p2'].every(t => titles.includes(t)), titles.filter(t => t.startsWith('#DPS榜 ')).join(' | '))
+check('危战组含版本与首领写法', ['#DPS危战榜 7.1', '#DPS危战榜 <首领>'].every(t => titles.includes(t)))
 
 finish()

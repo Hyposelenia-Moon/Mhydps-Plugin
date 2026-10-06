@@ -90,7 +90,8 @@ config/config.yaml.example  ← 参考默认值（入库，首次启动自动复
 - 模板在 `resources/dps/*.html`，art-template 语法；`{{_res_path}}` / `{{_data_path}}` / `{{renderScale}}` / `{{copyright}}` 由 `components/render.js` 注入。
 - 模板内不写 `<script>`，不引用外部字体（仓库不携带字体文件）。
 - **配色只写在 `resources/common/base.css` 的 `:root` 变量块**（当前为白底浅色一套）：`components.css` 与 5 个模板一律 `var(--x)`，不得写死色值；这条由 `render-templates` 套件守门（残留深色主题色或模板里出现 hex/rgba 都会红）。
-- 帮助图内容来自 `resources/help/help-cfg.js`（`helpCfg` / `quickStart` / `helpList`；条目可选 `syntax` / `args` / `examples`），改文案无需重启 bot，但**结构契约由 `help-config` 套件钉住**。
+- 帮助图内容来自 `resources/help/help-cfg.js`，版式是「页头 + 分组标题条 + 三列指令网格」，每项只有 `title` / `desc` 两个字段——**不要加回语法块 / 参数表 / 示例块**（`help-config` 套件会因条目出现多余字段而报红）。参数写法请直接落成可照抄的命令条目（如 `#DPS榜 金≤12`）。
+- 帮助页页头支持可选背景图：把图片放到 `resources/common/help-bg.{webp,png,jpg,jpeg}` 即自动铺图（叠白色遮罩保证文字可读），没图时用浅色渐变兜底；**仓库不携带任何美术资源**。
 - `components/render.js` 的 `RES_PREFIX` 层级依赖框架把 HTML 写到 `temp/html/<插件名>/<APP>/<tpl>/`，改动模板命名前先读该文件注释。
 
 ### 日志与注释

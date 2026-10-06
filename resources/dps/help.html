@@ -5,282 +5,144 @@
   <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/base.css"/>
   <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/components.css"/>
   <style>
-    /* 帮助页专用：快速上手卡 + 分组（命令 chip / 语法 / 参数表 / 示例） */
+    /* 帮助页专用：紧凑版式 —— 页头（可带背景图）+ 分组标题条 + 三列指令网格 */
 
-    /* ===== 快速上手卡：最常用的四条命令 + 参数速查 ===== */
-    .help-quick {
-      background: linear-gradient(135deg, var(--accent-soft), var(--purple-soft));
+    /* 固定容器宽度：三列等宽才有稳定的列线 */
+    .help-wrap {
+      width: 1120px;
+    }
+
+    /* ===== 页头 =====
+       有图（resources/common/help-bg.*）时用图；没图时用浅色渐变兜底。
+       文字压在图上，故叠一层白色半透明遮罩保证可读。 */
+    .help-hero {
+      position: relative;
+      border-radius: 12px;
+      padding: 16px 22px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      background: linear-gradient(120deg, var(--accent-soft), var(--purple-soft));
       border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 12px 16px;
-      margin-bottom: 14px;
     }
-    .quick-title {
-      font-size: 22px;
-      font-weight: 700;
+    .help-hero.has-bg {
+      background-position: center 30%;
+      background-size: cover;
+      background-repeat: no-repeat;
+      min-height: 150px;
+    }
+    /* 背景图上的白色遮罩：从左到右渐弱，保证左侧文字清晰、右侧插图仍可见 */
+    .help-hero.has-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.94) 34%, rgba(255, 255, 255, 0.55) 100%);
+    }
+    .help-hero > * {
+      position: relative;
+    }
+    .hero-title {
+      font-size: 34px;
+      font-weight: 800;
       color: var(--text);
-      margin-bottom: 8px;
+      line-height: 1.25;
+      letter-spacing: 0.5px;
     }
-    /* 四条命令按两列排，短命令不至于把行撑散 */
-    .quick-cmds {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 18px;
-    }
-    .quick-cmd {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      flex: 0 0 48%;
-    }
-    .quick-desc {
+    .hero-sub {
+      margin-top: 4px;
       font-size: 18px;
       color: var(--muted);
     }
-    /* 参数速查：左标签右取值 */
-    .quick-notes {
+    .hero-plugin {
       margin-top: 10px;
-      padding-top: 8px;
-      border-top: 1px solid var(--line);
-    }
-    .quick-note {
-      display: flex;
-      align-items: baseline;
-      gap: 10px;
-      font-size: 18px;
-      padding: 2px 0;
-    }
-    .quick-note-label {
-      flex: 0 0 92px;
-      color: var(--text-2);
+      font-size: 17px;
       font-weight: 600;
-    }
-    .quick-note-text {
-      color: var(--muted);
+      color: var(--accent);
+      letter-spacing: 0.5px;
     }
 
-    /* ===== 分组标题：序号 + 名称 ===== */
-    .help-section {
-      margin-bottom: 14px;
-    }
-    .help-section-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 22px;
+    /* ===== 分组标题条 ===== */
+    .help-group {
+      margin: 10px 0 6px;
+      padding: 5px 12px;
+      font-size: 21px;
       font-weight: 700;
       color: var(--text);
-      line-height: 1.3;
-      padding: 8px 12px;
       background: var(--card-2);
       border: 1px solid var(--line);
       border-left: 4px solid var(--accent);
       border-radius: 8px;
-      margin-bottom: 8px;
-    }
-    .help-index {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: var(--accent);
-      color: var(--rank-3-text);
-      font-size: 17px;
-      font-weight: 700;
-      line-height: 1;
     }
 
-    /* ===== 单条指令卡 ===== */
-    .help-item {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 10px 14px;
-      margin-bottom: 8px;
-      box-shadow: var(--shadow);
+    /* ===== 三列指令网格 ===== */
+    .help-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px 20px;
+      padding: 0 2px;
     }
-    .help-item:last-child {
-      margin-bottom: 0;
+    /* 单条指令：命令名 + 一行说明 */
+    .help-entry {
+      min-width: 0;
     }
-    /* 首行：命令 chip + 一句话说明 */
-    .help-item-head {
-      display: flex;
-      align-items: baseline;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .help-cmd {
+    .entry-cmd {
       font-size: 19px;
       font-weight: 700;
-      color: var(--accent);
-      background: var(--accent-soft);
-      border-color: var(--accent-line);
-    }
-    .help-desc {
-      font-size: 19px;
-      color: var(--text-2);
-      line-height: 1.5;
-      max-width: 760px;
-      word-break: break-word;
-    }
-    /* 语法 / 示例行：左侧固定标签 + 右侧内容 */
-    .help-line {
-      display: flex;
-      align-items: baseline;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 7px;
-    }
-    .help-line-label {
-      flex: 0 0 46px;
-      font-size: 17px;
-      color: var(--muted);
-    }
-    .help-example {
-      margin-right: 6px;
-    }
-
-    /* ===== 参数表 ===== */
-    .help-args {
-      width: 100%;
-      margin-top: 8px;
-      border-collapse: collapse;
-      font-size: 18px;
-      table-layout: fixed;
-    }
-    .help-args th {
-      text-align: left;
-      font-weight: 600;
-      color: var(--muted);
-      background: var(--card-2);
-      padding: 3px 10px;
-      border: 1px solid var(--line-soft);
-    }
-    .help-args td {
-      padding: 3px 10px;
-      border: 1px solid var(--line-soft);
-      color: var(--text-2);
-      vertical-align: top;
-    }
-    /* 三列宽度：参数名窄、取值中、说明宽 */
-    .help-args .col-name { width: 16%; }
-    .help-args .col-value { width: 30%; }
-    .arg-name {
-      color: var(--text);
-      font-weight: 600;
+      color: var(--gold);
+      line-height: 1.4;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .arg-value {
-      color: var(--accent);
-    }
-    .arg-desc {
+    .entry-desc {
+      font-size: 17px;
       color: var(--muted);
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+    /* 组内条目数为 1~2 时不要拉成三列（靠对齐更自然） */
+    .help-grid.cols-1 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .help-grid.cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   </style>
 </head>
 <body style="zoom:{{renderScale}}">
-  <div class="header">
-    <div class="game-name">Mhydps-Plugin</div>
-    <div class="title">{{if helpCfg && helpCfg.title}}{{helpCfg.title}}{{else}}#DPS帮助{{/if}}</div>
-    {{if helpCfg && helpCfg.subTitle}}
-    <div class="subtitle">{{helpCfg.subTitle}}</div>
-    {{/if}}
-  </div>
+  <div class="help-wrap">
+    <!-- ===== 页头：有 helpBg 时铺图，否则浅色渐变 ===== -->
+    <div class="help-hero{{if helpBg}} has-bg{{/if}}"{{if helpBg}} style="background-image: url('{{_res_path}}/common/{{helpBg}}')"{{/if}}>
+      <div class="hero-title">{{if helpCfg && helpCfg.title}}{{helpCfg.title}}{{else}}#DPS帮助{{/if}}</div>
+      {{if helpCfg && helpCfg.subTitle}}
+      <div class="hero-sub">{{helpCfg.subTitle}}</div>
+      {{/if}}
+      <div class="hero-plugin">{{if versionText}}{{versionText}}{{else}}Mhydps-Plugin{{/if}}</div>
+    </div>
 
-  <!-- ===== 快速上手：四条常用命令 + 参数速查 ===== -->
-  {{if quickStart && quickStart.commands && quickStart.commands.length > 0}}
-  <div class="help-quick">
-    <div class="quick-title">{{if quickStart.title}}{{quickStart.title}}{{else}}快速上手{{/if}}</div>
-    <div class="quick-cmds">
-      {{each quickStart.commands cmd}}
-      <div class="quick-cmd">
-        <span class="code">{{cmd.title}}</span>
-        <span class="quick-desc">{{if cmd.desc}}{{cmd.desc}}{{else}}-{{/if}}</span>
-      </div>
-      {{/each}}
-    </div>
-    {{if quickStart.notes && quickStart.notes.length > 0}}
-    <div class="quick-notes">
-      {{each quickStart.notes note}}
-      <div class="quick-note">
-        <span class="quick-note-label">{{if note.label}}{{note.label}}{{else}}提示{{/if}}</span>
-        <span class="quick-note-text">{{note.text}}</span>
-      </div>
-      {{/each}}
-    </div>
-    {{/if}}
-  </div>
-  {{/if}}
-
-  <!-- ===== 分组指令 ===== -->
-  {{if helpGroup && helpGroup.length > 0}}
-  {{each helpGroup group groupIndex}}
-  <div class="help-section">
-    <div class="help-section-title">
-      <span class="help-index">{{groupIndex + 1}}</span>
-      <span>{{group.group}}</span>
-    </div>
+    <!-- ===== 分组 + 三列网格 ===== -->
+    {{if helpGroup && helpGroup.length > 0}}
+    {{each helpGroup group}}
+    <div class="help-group">{{group.group}}</div>
     {{if group.list && group.list.length > 0}}
-    {{each group.list item}}
-    <div class="help-item">
-      <div class="help-item-head">
-        <span class="code help-cmd">{{item.title}}</span>
-        <span class="help-desc">{{if item.desc}}{{item.desc}}{{else}}-{{/if}}</span>
+    <div class="help-grid{{if group.list.length === 1}} cols-1{{else if group.list.length === 2}} cols-2{{/if}}">
+      {{each group.list item}}
+      <div class="help-entry">
+        <div class="entry-cmd">{{item.title}}</div>
+        <div class="entry-desc">{{if item.desc}}{{item.desc}}{{else}}-{{/if}}</div>
       </div>
-
-      {{if item.syntax}}
-      <div class="help-line">
-        <span class="help-line-label">语法</span>
-        <span class="code">{{item.syntax}}</span>
-      </div>
-      {{/if}}
-
-      {{if item.args && item.args.length > 0}}
-      <table class="help-args">
-        <thead>
-          <tr>
-            <th class="col-name">参数</th>
-            <th class="col-value">取值</th>
-            <th>说明</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{each item.args arg}}
-          <tr>
-            <td class="arg-name">{{arg.name}}</td>
-            <td class="arg-value">{{arg.value}}</td>
-            <td class="arg-desc">{{arg.desc}}</td>
-          </tr>
-          {{/each}}
-        </tbody>
-      </table>
-      {{/if}}
-
-      {{if item.examples && item.examples.length > 0}}
-      <div class="help-line">
-        <span class="help-line-label">示例</span>
-        <span>
-          {{each item.examples example}}
-          <span class="code help-example">{{example}}</span>
-          {{/each}}
-        </span>
-      </div>
-      {{/if}}
+      {{/each}}
     </div>
+    {{else}}
+    <div class="help-grid cols-1">
+      <div class="help-entry"><div class="entry-desc">该分组暂无指令</div></div>
+    </div>
+    {{/if}}
     {{/each}}
     {{else}}
-    <div class="help-item">
-      <div class="help-desc">该分组暂无指令</div>
-    </div>
+    <div class="empty-hint">未取到帮助配置，请检查插件 help 配置项</div>
     {{/if}}
-  </div>
-  {{/each}}
-  {{else}}
-  <div class="empty-hint">未取到帮助配置，请检查插件 help 配置项</div>
-  {{/if}}
 
-  <div class="copyright">{{copyright}}</div>
+    <div class="copyright">{{copyright}}</div>
+  </div>
 </body>
 </html>

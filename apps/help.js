@@ -1,14 +1,35 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import plugin from '../../../lib/plugins/plugin.js'
 import { getPluginConfig } from '../components/config.js'
-import { COPYRIGHT, SITE_NAME } from '../components/constants.js'
+import { COPYRIGHT } from '../components/constants.js'
+import { pluginVersion, versionText } from '../components/pluginVersion.js'
 import { renderDps } from '../components/render.js'
 
 const config = getPluginConfig()
+
+/** 版本兜底：pluginVersion.js 读不到 package.json 时为 unknown，页脚仍要有可读内容 */
+const heroVersion = versionText || `Mhydps-Plugin ${pluginVersion}`
 
 /** `#DPS帮助` */
 const CMD_RE = /^#?(?:dps|DPS)帮助$/
 
 const TITLE = '#DPS帮助'
+
+/** 帮助页可选背景图（放在 resources/common/ 下，按此顺序取第一张存在的） */
+const HERO_BG_CANDIDATES = ['help-bg.webp', 'help-bg.png', 'help-bg.jpg', 'help-bg.jpeg']
+
+/**
+ * 找可用的帮助页背景图
+ *
+ * 有图就用图（铺在页头，叠一层白色遮罩保证文字可读），没图回落浅色渐变。
+ * 由使用者自行放入图片文件，仓库不携带任何美术资源。
+ * @returns {string} 文件名（供模板拼 {{_res_path}}/common/<name>），无图返回空串
+ */
+function findHeroBg () {
+  const dir = path.join(process.cwd(), 'plugins', 'Mhydps-Plugin', 'resources', 'common')
+  return HERO_BG_CANDIDATES.find(name => fs.existsSync(path.join(dir, name))) || ''
+}
 
 export class MhydpsHelp extends plugin {
   constructor () {
@@ -31,28 +52,26 @@ export class MhydpsHelp extends plugin {
     // 文本回退与出图共用同一份数据，失败时才能保证内容一致
     let helpCfg = { title: TITLE, subTitle: '' }
     let helpGroup = []
-    let quickStart = null
 
     try {
       const helpPath = `${process.cwd()}/plugins/Mhydps-Plugin/resources/help/help-cfg.js`
       const cfgMod = await import(`file://${helpPath}?t=${Date.now()}`)
       helpCfg = cfgMod.helpCfg || helpCfg
-      quickStart = cfgMod.quickStart || null
 
       helpGroup = (cfgMod.helpList || [])
         .filter(group => group.auth !== 'master' || e.isMaster)
         .map(group => ({
           group: group.group,
-          list: group.list.map(item => ({
-            title: item.title,
-            desc: item.desc,
-            syntax: item.syntax,
-            args: item.args,
-            examples: item.examples
-          }))
+          list: group.list.map(item => ({ title: item.title, desc: item.desc }))
         }))
 
-      const data = { siteName: SITE_NAME, helpCfg, quickStart, helpGroup, copyright: COPYRIGHT }
+      const data = {
+        helpCfg,
+        helpGroup,
+        helpBg: findHeroBg(),
+        versionText: heroVersion,
+        copyright: COPYRIGHT
+      }
       const img = await renderDps('help', data)
       if (img) {
         await e.reply(img)
@@ -63,31 +82,23 @@ export class MhydpsHelp extends plugin {
       logger?.error?.(`[Mhydps] 帮助图渲染失败：${err?.message || err}`)
     }
 
-    await e.reply(this.textOf({ helpCfg, quickStart, helpGroup, isMaster: e.isMaster }))
+    await e.reply(this.textOf({ helpCfg, helpGroup, isMaster: e.isMaster }))
     return true
   }
 
   /**
-   * 文本回退：按分组列命令与说明，并带上参数速查
-   * @param {object} view - { helpCfg, quickStart, helpGroup, isMaster }
+   * 文本回退：按分组列命令与一行说明
+   * @param {object} view - { helpCfg, helpGroup, isMaster }
    * @returns {string}
    */
   textOf (view) {
     const lines = [view.helpCfg?.title || TITLE]
     if (view.helpCfg?.subTitle) lines.push(view.helpCfg.subTitle)
 
-    if (view.quickStart?.notes?.length) {
-      lines.push('', '【参数速查】')
-      for (const note of view.quickStart.notes) {
-        lines.push(`· ${note.label}：${note.text}`)
-      }
-    }
-
     for (const group of view.helpGroup) {
       lines.push('', `【${group.group}】`)
       for (const item of group.list) {
         lines.push(`· ${item.title}${item.desc ? ` — ${item.desc}` : ''}`)
-        if (item.examples?.length) lines.push(`   例：${item.examples.join('　')}`)
       }
     }
 
