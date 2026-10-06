@@ -36,6 +36,7 @@ const { cacheInfo, getCounts } = await import(mod('model/TeamStore.js'))
 const { avatarStats } = await import(mod('model/AvatarStore.js'))
 const { helpCfg, helpList } = await import(mod('resources/help/help-cfg.js'))
 const { versions } = await import(mod('model/CharacterIndex.js'))
+const { prepareSharedAssets } = await import(mod('model/PanelAssets.js'))
 const { COPYRIGHT, SITE_NAME, formatTime, agoText } = await import(mod('components/constants.js'))
 const { pluginVersion, yunzaiVersion, versionText } = await import(mod('components/pluginVersion.js'))
 
@@ -122,10 +123,11 @@ if (rank.html) {
   check('rank：渲染了伤害与金数', rank.html.includes('323.0 万') && rank.html.includes('48'))
   check('rank：渲染了名次', rank.html.includes('rank-badge') || rank.html.includes('rank'))
   check('rank：页脚带版权行', rank.html.includes('mhydps.cn'))
-  check('rank：插画整页覆盖（模糊 + 薄白纱）', rank.html.includes('bg-rank.jpg') && rank.html.includes('page-bg') && rank.html.includes('var(--page-veil)'))
-  check('rank：正文不再包白卡（避免把插画切成碎片）', rank.html.includes('page-inner') && !rank.html.includes('page-sheet'))
+  check('rank：插画整页覆盖', rank.html.includes('bg-rank.jpg') && rank.html.includes('page-bg'))
+  check('rank：文字都落在深色内容条上', rank.html.includes('head-card') && rank.html.includes('body-card') && rank.html.includes('foot-card'))
   check('rank：已移除行尾视频列', !rank.html.includes('rank-side') && !rank.html.includes('video-mark'))
-  check('rank：横幅文字用白色令牌', rank.html.includes('var(--hero-text)') && rank.html.includes('var(--hero-scrim)'))
+  check('rank：不残留浅色主题的蒙版令牌', !rank.html.includes('page-veil') && !rank.html.includes('hero-scrim'))
+  check('rank：榜单行数与数据条数一致', (rank.html.match(/class="rank-row"/g) || []).length === rankData.rows.length, `${rankData.rows.length} 行`)
 }
 
 // ---- raid ----
@@ -149,12 +151,14 @@ if (raid.html) {
   check('raid：已移除行尾视频列', !raid.html.includes('rank-side') && !raid.html.includes('video-mark'))
 }
 
-// ---- build ----
+// ---- build：练度面板（照 miao profile-detail 的版式） ----
 const buildData = {
   siteName: SITE_NAME,
   title: '#DPS练度查询',
   player: readPlayer(enka),
   chars: enka.avatarInfoList.map(buildCharView),
+  assets: prepareSharedAssets(),
+  notice: '已按 胡桃 筛选（命中 1 个）',
   copyright: COPYRIGHT
 }
 const build = await renderOnce('build', buildData, 'test-build')
@@ -164,7 +168,14 @@ if (build.html) {
   check('build：渲染了玩家与角色', build.html.includes('测试玩家') && build.html.includes('胡桃'))
   check('build：渲染了面板数值', build.html.includes('54.2%'))
   check('build：渲染了圣遗物', build.html.includes('魔女的炎之花'))
-  check('build：渲染了武器', build.html.includes('护摩之杖'))
+  check('build：渲染了武器与武器面板', build.html.includes('护摩之杖') && build.html.includes('基础攻击'))
+  check('build：面板样式表已挂上', build.html.includes('profile/panel.css'))
+  check('build：一屏一角色（panel-card 数量与角色数一致）', (build.html.match(/class="panel-card"/g) || []).length === buildData.chars.length)
+  check('build：天赋改成三枚圆徽章', (build.html.match(/class="talent-icon"/g) || []).length >= 3 && build.html.includes('普攻'))
+  check('build：命座 6 枚圆图标（未解锁置灰）', (build.html.match(/class="talent-icon off"/g) || []).length >= 1)
+  check('build：属性行带 miao 的图标类名', /class="i-(hp|atk|def|mastery|cpct|cdmg|recharge)"/.test(build.html))
+  check('build：筛选提示行已渲染', build.html.includes('已按 胡桃 筛选'))
+  check('build：整页插画底与内容条仍在', build.html.includes('bg-build.jpg') && build.html.includes('head-card') && build.html.includes('foot-card'))
 }
 
 // ---- status ----
@@ -211,26 +222,25 @@ if (help.html) {
   check('help：使用三列网格', help.html.includes('class="help-grid"') || help.html.includes('help-grid cols-'))
   check('help：条目含命令与说明', help.html.includes('entry-cmd') && help.html.includes('entry-desc'))
   check('help：说明文案来自配置', help.html.includes('只看无宏、无连点的记录'))
-  check('help：页头有版本行', help.html.includes('hero-plugin') && help.html.includes('Mhydps-Plugin 1.0.0'))
-  check('help：插画整页覆盖（模糊 + 薄白纱）', help.html.includes('bg-help.jpg') && help.html.includes('page-bg') && help.html.includes('var(--page-veil)'))
-  check('help：正文不再包白卡', help.html.includes('page-inner') && !help.html.includes('page-sheet'))
-  check('help：副标题与版本行仍在小字区', help.html.includes('sheet-head'))
-  check('help：标题在横幅内、小字在白底区', help.html.includes('hero-title') && help.html.includes('sheet-head'))
-  check('help：横幅文字用白色令牌', help.html.includes('var(--hero-text)') && help.html.includes('var(--hero-scrim)'))
+  check('help：页头只有插件名/标题/副标题（版本行按需求已移除）', help.html.includes('game-name') && !help.html.includes('page-meta'))
+  check('help：插画整页覆盖', help.html.includes('bg-help.jpg') && help.html.includes('page-bg'))
+  check('help：文字都落在深色内容条上', help.html.includes('head-card') && help.html.includes('body-card') && help.html.includes('foot-card'))
+  check('help：不残留横幅版式的类名', !help.html.includes('page-hero') && !help.html.includes('sheet-head') && !help.html.includes('hero-body'))
+  check('help：不残留浅色主题的蒙版令牌', !help.html.includes('page-veil') && !help.html.includes('row-veil'))
   check('help：不再渲染参数表/快速上手/示例块', !help.html.includes('help-args') && !help.html.includes('快速上手') && !help.html.includes('help-example'))
   // 尖括号 placeholder 会被 art-template 转义（实体形式随版本而异，两种都认）
   check('help：示例中的尖括号被转义而非当标签', /(&#60;|&lt;)UID(&#62;|&gt;)/.test(help.html))
 }
 
-// ---- 白底主题：配色只在 base.css 的变量块里，模板与组件不写死色值 ----
+// ---- 深色插画主题：配色只在 base.css 的变量块里，模板与共享组件不写死色值 ----
 const baseCss = fs.readFileSync(path.join(pluginRoot, 'resources', 'common', 'base.css'), 'utf8')
 const compCss = fs.readFileSync(path.join(pluginRoot, 'resources', 'common', 'components.css'), 'utf8')
 
-check('主题底色为纯白', /--bg:\s*#ffffff/i.test(baseCss))
+check('主题底色为深色插画底', /--bg:\s*#101219/i.test(baseCss))
 check('body 使用主题底色变量', /body\s*\{[\s\S]*?background-color:\s*var\(--bg\)/.test(baseCss))
-const darkLeftovers = ['#12121a', '#1b1b26', '#262634', '#e8e8f2', '#c8c8dc', '#9a9ab4', '#7a7a96', '#6f6f88', '#a9c8ff', '#ff9c9c', '#4a9eff', '#ffd700', '#a855f7']
+const lightLeftovers = ['#ffffff', '#f7f7fb', '#eef1f7', '#1e2230', '#4c5265', '#144f96']
   .filter(c => (baseCss + compCss).toLowerCase().includes(c))
-check('样式里没有残留的深色主题色', darkLeftovers.length === 0, darkLeftovers.join(','))
+check('样式里没有残留的浅色主题色', lightLeftovers.length === 0, lightLeftovers.join(','))
 const varUses = (compCss.match(/var\(--/g) || []).length
 check('组件样式全部走变量着色', varUses >= 40, `${varUses} 处`)
 
@@ -241,6 +251,13 @@ for (const f of ['help.html', 'rank.html', 'raid.html', 'build.html', 'status.ht
   if (hits) templateColors.push(`${f}:${hits.join('/')}`)
 }
 check('模板内不写死颜色（全部走变量）', templateColors.length === 0, templateColors.join(' | '))
+
+// 练度面板是唯一的例外：版式与配色逐条照抄 miao-plugin 的 profile-detail，
+// 色值集中在 resources/profile/panel.css（模板本身仍不写颜色）。
+const panelCss = fs.readFileSync(path.join(pluginRoot, 'resources', 'profile', 'panel.css'), 'utf8')
+check('练度面板样式表存在且带照抄说明', panelCss.includes('miao-plugin') && panelCss.length > 2000, `${panelCss.length} 字节`)
+check('练度面板样式表刻意保留 miao 的原色值', panelCss.includes('#ffe699') && panelCss.includes('rgba(50, 50, 50, 0.4)'))
+check('练度面板不在共享组件里（不污染其它页面）', !compCss.includes('.panel-card') && !baseCss.includes('.panel-card'))
 
 // ---- 字体：原神字体随包分发（不联网下载），数字走提瓦特数字 ----
 check('声明了原神中文字体 YS（汉仪文黑）', /@font-face\s*\{[^}]*font-family:\s*'YS'/s.test(baseCss))
@@ -262,6 +279,13 @@ for (const f of ['help.html', 'rank.html', 'raid.html', 'build.html', 'status.ht
   if (/font-family/.test(text)) fontHardcode.push(f)
 }
 check('模板不硬编码字体（统一由 base.css 决定）', fontHardcode.length === 0, fontHardcode.join(','))
+
+// ---- 五张图都铺了整页插画底（渲染产物里能看到各自的 page-bg 与底图名） ----
+const renderedPages = { rank, raid, build, status, help }
+const bgFiles = { rank: 'bg-rank.jpg', raid: 'bg-raid.jpg', build: 'bg-build.jpg', status: 'bg-status.jpg', help: 'bg-help.jpg' }
+for (const [name, page] of Object.entries(renderedPages)) {
+  check(`${name}：整页插画底已铺上（${bgFiles[name]}）`, Boolean(page.html) && page.html.includes(bgFiles[name]) && page.html.includes('class="page-bg"'))
+}
 
 // ---- 渲染缩放：由配置注入模板（调用方传的值不生效，避免绕过配置） ----
 const scaled = await renderOnce('rank', { ...rankData, renderScale: 2 }, 'test-rank-scale')

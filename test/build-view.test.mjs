@@ -23,7 +23,10 @@ const {
   readTalents,
   readPanel,
   artifactStatText,
-  panelStatText
+  panelStatText,
+  weaponStatLabel,
+  weaponStatText,
+  pickAvatarsByNames
 } = await import(mod('modules/buildQuery.js'))
 const { readPlayer } = await import(mod('model/EnkaClient.js'))
 
@@ -90,5 +93,37 @@ check('无立绘缓存时 avatar 为空（模板走文字占位）', view.avatar
 const qiqi = buildCharView(sample.avatarInfoList[1])
 check('第二个角色无武器/圣遗物也不崩', qiqi.name === '琴' && qiqi.weapon === null && qiqi.artifacts.length === 0)
 check('命座为 1 时计数正确', qiqi.constellation === 1, `${qiqi.constellation}`)
+
+// ---- 武器面板（Enka flat.weaponStats） ----
+check('武器面板属性读取', weapon.attrs.length === 2, `${weapon.attrs.length} 项`)
+check('基础攻击力标签', weaponStatLabel('FIGHT_PROP_BASE_ATTACK') === '基础攻击', weaponStatLabel('FIGHT_PROP_BASE_ATTACK'))
+check('武器基础攻击取整', weapon.attrs[0].value === '608', weapon.attrs[0].value)
+check('武器副词条 0~1 小数转百分比', weaponStatText('FIGHT_PROP_CRITICAL_HURT', 0.662) === '66.2%', weaponStatText('FIGHT_PROP_CRITICAL_HURT', 0.662))
+check('武器副词条沿用面板词条标签', weapon.attrs[1].label === '暴击伤害', weapon.attrs[1].label)
+check('本机没装 miao 时武器文案为 null（模板整块不渲染）', weapon.detail === null)
+
+// ---- 面板素材字段（本机没装图库/miao 时全为空串，模板整体降级） ----
+check('视图带 panel 素材字段', view.panel && typeof view.panel.bg === 'string' && view.panel.cons.length === 6)
+check('命座素材点亮状态按命座数', view.panel.cons.filter(c => c.on).length === view.constellation)
+check('面板属性带图标类名', view.stats.every(s => /^i-/.test(s.icon)), view.stats.map(s => s.icon).join(','))
+
+// ---- 按角色名筛选（`#DPS练度查询 胡桃`） ----
+let picked = pickAvatarsByNames(sample.avatarInfoList, ['胡桃'])
+check('按正式名筛选命中所属角色', picked.picked.length === 1 && picked.picked[0].avatarId === hutao.avatarId)
+
+picked = pickAvatarsByNames(sample.avatarInfoList, ['桃'])
+check('按别名筛选同样命中', picked.picked.length === 1 && picked.picked[0].avatarId === hutao.avatarId)
+
+picked = pickAvatarsByNames(sample.avatarInfoList, ['胡桃', '琴'])
+check('多角色筛选取并集', picked.picked.length === 2)
+
+picked = pickAvatarsByNames(sample.avatarInfoList, ['不存在的角色'])
+check('关键词全都不是角色名时不当作筛选（原样返回全部，只提示未识别）', picked.picked.length === sample.avatarInfoList.length && picked.unknown.includes('不存在的角色'))
+
+picked = pickAvatarsByNames(sample.avatarInfoList, [])
+check('不筛选时原样返回全部', picked.picked.length === sample.avatarInfoList.length)
+
+picked = pickAvatarsByNames(sample.avatarInfoList, ['胡桃', '瞎写'])
+check('命中与未命中混用：只筛命中的，未命中单独回传', picked.picked.length === 1 && picked.unknown.join(',') === '瞎写')
 
 finish()

@@ -18,7 +18,7 @@ export const helpList = [
   {
     group: '榜单查询',
     list: [
-      { title: '#DPS榜', desc: 'DPS 配队总榜（按期望 DPS 降序）' },
+      { title: '#DPS榜', desc: 'DPS 配队总榜（按期望 DPS 降序）；「榜」字可省：#DPS 亦可' },
       { title: '#DPS榜 <角色>', desc: '只看含该角色的配队，支持别名（火神 / 龟 / 爷）' },
       { title: '#DPS榜 <角色> 主C', desc: '限定该角色为阵容主 C（配队第一位）' },
       { title: '#DPS榜 金≤12', desc: '按总金数筛选：12金 / 金12 / 金≥8 / 8-12金' },
@@ -42,7 +42,9 @@ export const helpList = [
   {
     group: '练度查询',
     list: [
-      { title: '#DPS练度查询 <UID>', desc: '角色面板与圣遗物明细（Enka 数据）' },
+      { title: '#DPS练度查询 <UID>', desc: 'miao 面板样式的角色面板 + 圣遗物明细（Enka 数据）' },
+      { title: '#DPS练度查询 <角色>', desc: '只看指定角色，支持别名（如 桃）；UID 取配置默认值' },
+      { title: '#DPS练度查询 <角色> <UID>', desc: '角色与 UID 顺序随意、可写多个角色' },
       { title: '#练度查询 <UID>', desc: '简写，可省略 DPS 前缀' }
     ]
   },

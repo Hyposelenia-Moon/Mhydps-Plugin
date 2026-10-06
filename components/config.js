@@ -25,7 +25,10 @@ const defaultConfig = {
   cacheTtlMinutes: 30,
   pageSize: 10,
   timeoutMs: 30000,
-  avatarEnabled: true
+  avatarEnabled: true,
+  defaultUid: '',
+  profileImgDir: '',
+  miaoResDir: ''
 }
 
 /**

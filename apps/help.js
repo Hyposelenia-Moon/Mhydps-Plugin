@@ -1,13 +1,9 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import { getPluginConfig } from '../components/config.js'
 import { COPYRIGHT } from '../components/constants.js'
-import { pluginVersion, versionText } from '../components/pluginVersion.js'
 import { renderDps } from '../components/render.js'
 
 const config = getPluginConfig()
-
-/** 版本兜底：pluginVersion.js 读不到 package.json 时为 unknown，页脚仍要有可读内容 */
-const heroVersion = versionText || `Mhydps-Plugin ${pluginVersion}`
 
 /** `#DPS帮助` */
 const CMD_RE = /^#?(?:dps|DPS)帮助$/
@@ -51,7 +47,6 @@ export class MhydpsHelp extends plugin {
       const data = {
         helpCfg,
         helpGroup,
-        versionText: heroVersion,
         copyright: COPYRIGHT
       }
       const img = await renderDps('help', data)

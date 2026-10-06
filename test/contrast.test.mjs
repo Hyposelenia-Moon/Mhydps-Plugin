@@ -1,12 +1,11 @@
 /**
  * 对比度（WCAG 2.1 AA）+ 字号可读性：离线回归
  *
- * 这些断言不依赖 bot、也不读图片：全部从 `resources/common/base.css` 的令牌现算，
- * 因此任何一次调色只要把某处文字压到阈值以下就会直接报红。
+ * 主题结构（深色插画风）：插画铺满整页 → --scrim 压暗 → 所有文字落在 --card 深色内容条上。
+ * 因此文字的最坏背景是「最亮插画（纯白）经 --scrim、再经 --card」得到的等效底，
+ * 这里完全按令牌现算（不读图片），任何一次调色把某处文字压到阈值以下都会直接报红。
  *   - 正文（<24px 或 <18.66px 粗体）要求 ≥ 4.5:1
  *   - 大字（≥24px，或 ≥18.66px 粗体）要求 ≥ 3:1
- * 插画背景上的文字另有「整页蒙版 + 文字区面板」两层面板兜底（见 base.css 的 --page-veil / --panel-veil），
- * 面板之上的等效底色接近纯白，故这里以白底/卡底作为基准背景校核，属偏保守的口径。
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -25,7 +24,7 @@ function token (name) {
 
 /** #rrggbb / rgba(r, g, b, a) → [r,g,b,a] */
 function parseColor (value) {
-  const text = value.trim()
+  const text = String(value).trim()
   const hex = text.match(/^#([0-9a-f]{6})$/i)
   if (hex) {
     const h = hex[1]
@@ -60,40 +59,49 @@ function contrast (fg, bg) {
   return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)
 }
 
-const WHITE = [255, 255, 255, 1]
 const byToken = (name) => parseColor(token(name))
-const softOverWhite = (name) => over(byToken(name), WHITE)
+
+// 最坏链路：纯白插画（最亮）→ scrim → card → (可选 chip / card-2)
+const WHITE = [255, 255, 255, 1]
+const scrim = byToken('scrim')
+const cardBg = over(byToken('card'), over(scrim, WHITE))
+const chipBg = over(byToken('chip'), cardBg)
+const innerBg = over(byToken('card-2'), cardBg)
+// 直接落在插画上的容器自带 --card 垫底时，半透明「色味」层叠在 cardBg 上就是它的实际底
+const softOnCardBg = over(byToken('accent-soft'), cardBg)
+
+check('内容条底色足够暗（浅色小字才压得住）', relLum(cardBg) < 0.08, `L=${relLum(cardBg).toFixed(3)}`)
 
 /** 规格：标签 / 前景色 / 背景色 / 字号 / 是否粗体 */
 const specs = [
-  ['正文主色 --text', byToken('text'), WHITE, 20, false],
-  ['次级文字 --text-2', byToken('text-2'), WHITE, 15, false],
-  ['弱化文字 --muted', byToken('muted'), WHITE, 17, false],
-  ['更弱文字 --muted-2', byToken('muted-2'), WHITE, 18, false],
-  ['弱化文字 on 卡内底', byToken('muted'), byToken('card-2'), 16, false],
-  ['强调蓝 --accent', byToken('accent'), WHITE, 18, true],
-  ['强调紫 --accent-2', byToken('accent-2'), WHITE, 16, false],
-  ['金色 --gold', byToken('gold'), WHITE, 19, true],
-  ['绿色 --green', byToken('green'), WHITE, 16, false],
-  ['红色 --red', byToken('red'), WHITE, 15, false],
-  ['标签：蓝 on 蓝底', byToken('accent'), softOverWhite('accent-soft'), 16, false],
-  ['标签：绿玩 on 绿底', byToken('green'), softOverWhite('green-soft'), 16, false],
-  ['标签：满级 on 金底', byToken('gold'), softOverWhite('gold-soft'), 16, false],
-  ['标签：版本 on 紫底', byToken('accent-2'), softOverWhite('purple-soft'), 16, false],
-  ['视频标记 on 红底', byToken('red'), softOverWhite('red-soft'), 15, false],
+  ['正文主色 --text', byToken('text'), cardBg, 20, false],
+  ['次级文字 --text-2', byToken('text-2'), cardBg, 15, false],
+  ['弱化文字 --muted', byToken('muted'), cardBg, 17, false],
+  ['更弱文字 --muted-2', byToken('muted-2'), cardBg, 18, false],
+  ['弱化文字 on 内嵌底', byToken('muted'), innerBg, 16, false],
+  ['半透明强调底上的 --text', byToken('text'), softOnCardBg, 26, true],
+  ['强调蓝 --accent', byToken('accent'), cardBg, 18, true],
+  ['强调紫 --accent-2', byToken('accent-2'), cardBg, 16, false],
+  ['金色 --gold', byToken('gold'), cardBg, 19, true],
+  ['绿色 --green', byToken('green'), cardBg, 16, false],
+  ['红色 --red', byToken('red'), cardBg, 15, false],
+  ['标签：蓝 chip', byToken('accent'), chipBg, 18, false],
+  ['标签：绿玩 chip', byToken('green'), chipBg, 18, false],
+  ['标签：满级 chip', byToken('gold'), chipBg, 18, false],
+  ['标签：版本 chip', byToken('accent-2'), chipBg, 18, false],
   ['名次 1 文字 on 金渐起', byToken('rank-1-text'), byToken('rank-1-from'), 26, true],
   ['名次 1 文字 on 金渐止', byToken('rank-1-text'), byToken('rank-1-to'), 26, true],
   ['名次 2 文字 on 紫渐起', byToken('rank-2-text'), byToken('rank-2-from'), 26, true],
   ['名次 2 文字 on 紫渐止', byToken('rank-2-text'), byToken('rank-2-to'), 26, true],
   ['名次 3 文字 on 蓝渐起', byToken('rank-3-text'), byToken('rank-3-from'), 26, true],
   ['名次 3 文字 on 蓝渐止', byToken('rank-3-text'), byToken('rank-3-to'), 26, true],
-  ['元素 火', byToken('elem-pyro'), WHITE, 14, false],
-  ['元素 水', byToken('elem-hydro'), WHITE, 14, false],
-  ['元素 风', byToken('elem-anemo'), WHITE, 14, false],
-  ['元素 雷', byToken('elem-electro'), WHITE, 14, false],
-  ['元素 草', byToken('elem-dendro'), WHITE, 14, false],
-  ['元素 冰', byToken('elem-cryo'), WHITE, 14, false],
-  ['元素 岩', byToken('elem-geo'), WHITE, 14, false]
+  ['元素 火 on 内容条', byToken('elem-pyro'), cardBg, 14, false],
+  ['元素 水 on 内容条', byToken('elem-hydro'), cardBg, 14, false],
+  ['元素 风 on 内容条', byToken('elem-anemo'), cardBg, 14, false],
+  ['元素 雷 on 内容条', byToken('elem-electro'), cardBg, 14, false],
+  ['元素 草 on 内容条', byToken('elem-dendro'), cardBg, 14, false],
+  ['元素 冰 on 内容条', byToken('elem-cryo'), cardBg, 14, false],
+  ['元素 岩 on 内容条', byToken('elem-geo'), cardBg, 14, false]
 ]
 
 let worst = { name: '', ratio: Infinity }
@@ -105,13 +113,31 @@ for (const [name, fg, bg, size, bold] of specs) {
   check(`${name}（${size}px${bold ? ' 粗' : ''}）≥ ${need}`, ratio >= need, `${ratio.toFixed(2)}:1`)
 }
 
-// 字号可读性：正文不小于 14px（渲染时再乘 renderScale，实际像素更大）
-const sizes = [...css.matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)].map(m => Number(m[1]))
-check('base.css 存在字号声明', sizes.length > 0, `${sizes.length} 处`)
-check('base.css 最小字号 ≥ 14px', Math.min(...sizes) >= 14, `最小 ${Math.min(...sizes)}px`)
+// 直接落在插画上的容器必须自带垫底：半透明底在亮部插画上必然不达标。
+// .empty-hint 在共享组件里，走 --card 令牌；练度面板的两处提示条在 panel.css 里
+// （那份样式刻意照抄 miao 的固定色值），所以这里核对的是「够暗的原值」。
+const SURFACES = [
+  ['common/components.css', '.empty-hint', /var\(--card\)/],
+  ['profile/panel.css', '.panel-empty', /rgba\(0, 0, 0, 0\.4[0-9]?\)/],
+  ['profile/panel.css', '.panel-notice', /rgba\(0, 0, 0, 0\.4[0-9]?\)/]
+]
+for (const [file, selector, want] of SURFACES) {
+  const text = fs.readFileSync(path.join(pluginRoot, 'resources', file), 'utf8')
+  const rule = text.match(new RegExp(`${selector.replace(/\./g, '\\.')}\\s*\\{([^}]*)\\}`))
+  check(`${file} ${selector} 自带足够暗的垫底`, Boolean(rule) && want.test(rule[1]), rule ? rule[1].trim().slice(0, 60) : '未找到规则')
+}
 
-for (const file of ['components.css', 'rank.html', 'raid.html', 'build.html', 'status.html', 'help.html']) {
-  const text = fs.readFileSync(path.join(pluginRoot, 'resources', file.includes('.css') ? 'common' : 'dps', file), 'utf8')
+// 字号可读性：正文不小于 14px（渲染时再乘 renderScale，实际像素更大）
+for (const [dir, file] of [
+  ['common', 'components.css'],
+  ['common', 'base.css'],
+  ['dps', 'rank.html'],
+  ['dps', 'raid.html'],
+  ['dps', 'build.html'],
+  ['dps', 'status.html'],
+  ['dps', 'help.html']
+]) {
+  const text = fs.readFileSync(path.join(pluginRoot, 'resources', dir, file), 'utf8')
   const found = [...text.matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)].map(m => Number(m[1]))
   if (!found.length) continue
   const min = Math.min(...found)

@@ -56,7 +56,7 @@
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 12px 16px;
+  padding: 10px 12px;
   box-shadow: var(--shadow);
 }
 
@@ -261,17 +261,21 @@
    榜单行 — 名次 / 阵容 / 主数值 / 金数 / 标签（rank、raid 共用骨架）
    ═══════════════════════════════════════════════════════════ */
 
-/* ===== 榜单行 .rank-row ===== */
+/* ===== 榜单行 .rank-row（位于内容面板内：用发丝分隔，不再各自成卡） ===== */
 .rank-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 10px 16px;
-  margin-bottom: 10px;
-  box-shadow: var(--shadow);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: 0;
+  padding: 8px 6px;
+  box-shadow: none;
+}
+
+.rank-row:last-child {
+  border-bottom: none;
 }
 
 /* ===== 名次徽标 .rank-badge（4 名及以后为默认浅底） ===== */
@@ -388,7 +392,7 @@
   font-size: 18px;
   line-height: 1.5;
   color: var(--accent);
-  background: var(--accent-soft);
+  background: var(--chip);
   border: 1px solid var(--accent-line);
   white-space: nowrap;
 }
@@ -396,21 +400,21 @@
 /* ===== 绿玩标签 .tag-clean（绿） ===== */
 .tag-clean {
   color: var(--green);
-  background: var(--green-soft);
+  background: var(--chip);
   border-color: var(--green-line);
 }
 
 /* ===== 满级标签 .tag-lvl（金） ===== */
 .tag-lvl {
   color: var(--gold);
-  background: var(--gold-soft);
+  background: var(--chip);
   border-color: var(--gold-line);
 }
 
 /* ===== 版本标签 .tag-ver（紫） ===== */
 .tag-ver {
   color: var(--accent-2);
-  background: var(--purple-soft);
+  background: var(--chip);
   border-color: var(--purple-line);
 }
 
@@ -458,7 +462,9 @@
 
 /* ===== 空状态 .empty-hint（无数据/未公开详情） ===== */
 .empty-hint {
-  background: var(--card-3);
+  /* 直接落在插画上的提示条：底色必须是不透明的 --card，
+     卡到 --card-3（5% 白）时 --muted 文字在亮部插画上只有 1.4:1 */
+  background: var(--card);
   border: 1px dashed var(--line-strong);
   border-radius: 10px;
   padding: 18px 20px;
@@ -480,4 +486,42 @@
   font-size: 18px;
   color: var(--muted-2);
   line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   内容条变体 — 深色主题下所有文字都落在这些条上
+   ═══════════════════════════════════════════════════════════ */
+
+/* ===== 页头条 .head-card（标题 + 元信息） ===== */
+.head-card {
+  padding: 10px 12px 6px;
+  margin-bottom: 8px;
+}
+
+.head-card .header {
+  border-bottom: none;
+  margin-bottom: 5px;
+  padding-bottom: 0;
+}
+
+.head-card .page-meta {
+  margin-bottom: 0;
+}
+
+/* ===== 正文面板 .body-card（榜单行 / 分组内容） ===== */
+.body-card {
+  padding: 6px 8px;
+}
+
+/* ===== 页脚条 .foot-card（版权行） ===== */
+.foot-card {
+  padding: 3px 10px;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.foot-card .copyright {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }

@@ -9,9 +9,9 @@ import { suggestLine } from '../modules/respond.js'
 const config = getPluginConfig()
 
 /** `#DPS榜视频 <名次> [角色] [金数] ...` */
-const RANK_VIDEO_RE = /^#?(?:dps|DPS)榜视频\s*([\s\S]*)$/
+const RANK_VIDEO_RE = /^#?(?:dps|DPS)(?:榜)?视频\s*([\s\S]*)$/
 /** `#DPS危战榜视频 <名次> [版本] [首领] ...` */
-const RAID_VIDEO_RE = /^#?(?:dps|DPS)危战榜视频\s*([\s\S]*)$/
+const RAID_VIDEO_RE = /^#?(?:dps|DPS)?(?:危战榜|危战)视频\s*([\s\S]*)$/
 
 export class MhydpsVideo extends plugin {
   constructor () {

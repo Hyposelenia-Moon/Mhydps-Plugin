@@ -24,3 +24,18 @@ pageSize: 10
 
 # 是否缓存并渲染角色立绘（关闭后成图里以角色名文字占位）
 avatarEnabled: true
+
+# ---------- 练度查询 ----------
+# 默认 UID：命令里不写 UID 时用它（例：直接发「#DPS练度查询 胡桃」）
+defaultUid: ''
+
+# 面板立绘图库根目录（含 normal-character 的那一层目录），留空 = 自动探测
+# 自动探测顺序：
+#   plugins/ProfileImg-Plugin/resources/gallery/ProfileImg/miao-plugin-ProfileImg
+#   plugins/miao-plugin/resources/profile
+# 图库（AxiuCN/miao-plugin-ProfileImg，300MB+）需自行安装，本插件只读引用、不随包分发
+profileImgDir: ''
+
+# miao-plugin 的 resources 目录（面板图标：命座 / 武器 / 圣遗物），留空 = 自动探测
+# 自动探测 plugins/miao-plugin/resources；未安装时面板照常出图，只是不显示图标
+miaoResDir: ''

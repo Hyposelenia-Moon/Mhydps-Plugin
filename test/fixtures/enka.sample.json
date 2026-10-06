@@ -8,16 +8,26 @@
     "worldLevel": 9,
     "nameCardId": 210001,
     "finishAchievementNum": 1200,
-    "profilePicture": { "avatarId": 10000046 }
+    "profilePicture": {
+      "avatarId": 10000046
+    }
   },
   "avatarInfoList": [
     {
       "avatarId": 10000046,
       "propMap": {
-        "4001": { "ival": 90 },
-        "1002": { "ival": 6 }
+        "1002": {
+          "ival": 6
+        },
+        "4001": {
+          "ival": 90
+        }
       },
-      "talentIdList": [461, 462, 463],
+      "talentIdList": [
+        461,
+        462,
+        463
+      ],
       "skillLevelMap": {
         "12201": 10,
         "12202": 9,
@@ -25,13 +35,13 @@
         "12204": 1
       },
       "fightPropMap": {
-        "2000": 33139.43,
-        "2001": 1200.62,
-        "2002": 800.21,
-        "28": 374,
         "20": 0.542,
         "22": 1.884,
-        "23": 1.32
+        "23": 1.32,
+        "28": 374,
+        "2000": 33139.43,
+        "2001": 1200.62,
+        "2002": 800.21
       },
       "equipList": [
         {
@@ -39,11 +49,23 @@
           "flat": {
             "itemType": "ITEM_WEAPON",
             "name": "护摩之杖",
-            "rankLevel": 5
+            "rankLevel": 5,
+            "weaponStats": [
+              {
+                "appendPropId": "FIGHT_PROP_BASE_ATTACK",
+                "statValue": 608.07
+              },
+              {
+                "appendPropId": "FIGHT_PROP_CRITICAL_HURT",
+                "statValue": 0.662
+              }
+            ]
           },
           "weapon": {
             "level": 90,
-            "affixMap": { "13501": 0 }
+            "affixMap": {
+              "13501": 0
+            }
           }
         },
         {
@@ -53,15 +75,32 @@
             "equipType": "EQUIP_BRACER",
             "name": "魔女的炎之花",
             "rankLevel": 5,
-            "reliquaryMainstat": { "mainPropId": "FIGHT_PROP_HP", "statValue": 4780 },
+            "reliquaryMainstat": {
+              "mainPropId": "FIGHT_PROP_HP",
+              "statValue": 4780
+            },
             "reliquarySubstats": [
-              { "appendPropId": "FIGHT_PROP_CRITICAL", "statValue": 7.8 },
-              { "appendPropId": "FIGHT_PROP_CRITICAL_HURT", "statValue": 21 },
-              { "appendPropId": "FIGHT_PROP_ATTACK_PERCENT", "statValue": 9.9 },
-              { "appendPropId": "FIGHT_PROP_ELEMENT_MASTERY", "statValue": 40 }
+              {
+                "appendPropId": "FIGHT_PROP_CRITICAL",
+                "statValue": 7.8
+              },
+              {
+                "appendPropId": "FIGHT_PROP_CRITICAL_HURT",
+                "statValue": 21
+              },
+              {
+                "appendPropId": "FIGHT_PROP_ATTACK_PERCENT",
+                "statValue": 9.9
+              },
+              {
+                "appendPropId": "FIGHT_PROP_ELEMENT_MASTERY",
+                "statValue": 40
+              }
             ]
           },
-          "reliquary": { "level": 21 }
+          "reliquary": {
+            "level": 21
+          }
         },
         {
           "itemId": 15002,
@@ -70,13 +109,24 @@
             "equipType": "EQUIP_NECKLACE",
             "name": "魔女常燃之羽",
             "rankLevel": 5,
-            "reliquaryMainstat": { "mainPropId": "FIGHT_PROP_ATTACK", "statValue": 311 },
+            "reliquaryMainstat": {
+              "mainPropId": "FIGHT_PROP_ATTACK",
+              "statValue": 311
+            },
             "reliquarySubstats": [
-              { "appendPropId": "FIGHT_PROP_CRITICAL", "statValue": 3.5 },
-              { "appendPropId": "FIGHT_PROP_CHARGE_EFFICIENCY", "statValue": 11.7 }
+              {
+                "appendPropId": "FIGHT_PROP_CRITICAL",
+                "statValue": 3.5
+              },
+              {
+                "appendPropId": "FIGHT_PROP_CHARGE_EFFICIENCY",
+                "statValue": 11.7
+              }
             ]
           },
-          "reliquary": { "level": 21 }
+          "reliquary": {
+            "level": 21
+          }
         },
         {
           "itemId": 15003,
@@ -85,34 +135,46 @@
             "equipType": "EQUIP_SHOES",
             "name": "魔女破灭之时",
             "rankLevel": 5,
-            "reliquaryMainstat": { "mainPropId": "FIGHT_PROP_HP_PERCENT", "statValue": 46.6 },
+            "reliquaryMainstat": {
+              "mainPropId": "FIGHT_PROP_HP_PERCENT",
+              "statValue": 46.6
+            },
             "reliquarySubstats": [
-              { "appendPropId": "FIGHT_PROP_CRITICAL_HURT", "statValue": 14 }
+              {
+                "appendPropId": "FIGHT_PROP_CRITICAL_HURT",
+                "statValue": 14
+              }
             ]
           },
-          "reliquary": { "level": 21 }
+          "reliquary": {
+            "level": 21
+          }
         }
       ]
     },
     {
       "avatarId": 10000003,
       "propMap": {
-        "4001": { "ival": 80 }
+        "4001": {
+          "ival": 80
+        }
       },
-      "talentIdList": [31],
+      "talentIdList": [
+        31
+      ],
       "skillLevelMap": {
         "3201": 6,
         "3202": 6,
         "3203": 6
       },
       "fightPropMap": {
-        "2000": 21000,
-        "2001": 980,
-        "2002": 700,
-        "28": 120,
         "20": 0.31,
         "22": 0.62,
-        "23": 1.15
+        "23": 1.15,
+        "28": 120,
+        "2000": 21000,
+        "2001": 980,
+        "2002": 700
       },
       "equipList": []
     }

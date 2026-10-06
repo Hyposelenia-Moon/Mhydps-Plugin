@@ -9,7 +9,7 @@ import { respond, suggestLine } from '../modules/respond.js'
 const config = getPluginConfig()
 
 /** `#DPS危战榜` / `#危战榜` / `#DPS危战排行榜` */
-const CMD_RE = /^#?(?:dps|DPS)?(?:危战榜|危战排行榜|危战排行)(?!视频)\s*([\s\S]*)$/
+const CMD_RE = /^#?(?:dps|DPS)?(?:危战榜|危战|危战排行榜|危战排行)(?!榜?视频)\s*([\s\S]*)$/
 
 const TITLE = '#DPS危战榜'
 
@@ -19,7 +19,8 @@ export class MhydpsRaid extends plugin {
       name: 'Mhydps危战榜',
       dsc: '#DPS危战榜 [版本] [首领] [角色] [金数] [页N]',
       event: 'message',
-      priority: config.priority || 8000,
+      // 7980 < 8000：危战类命令先于宽泛的 #DPS 规则被检查
+      priority: config.priority ? config.priority - 20 : 7980,
       rule: [
         { reg: CMD_RE, fnc: 'handleRaid', permission: 'all' }
       ]

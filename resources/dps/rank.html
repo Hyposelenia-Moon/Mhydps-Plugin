@@ -5,150 +5,104 @@
   <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/base.css"/>
   <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/components.css"/>
   <style>
-    /* 榜单页专用：插画整页覆盖（轻模糊 + 薄白纱），正文直接压在上面 */
-
-    body {
-      padding: 0;
-    }
-    .page {
-      position: relative;
-    }
-    /* 背景层：铺满整页并放大一点，避免模糊后边缘发虚露白 */
-    .page-bg {
-      position: absolute;
-      inset: 0;
-      background-image: url('{{_res_path}}/common/bg-rank.jpg');
-      background-size: cover;
-      background-position: center top;
-      background-repeat: no-repeat;
-      filter: blur(var(--bg-blur)) saturate(1.05);
-      transform: scale(1.06);
-      transform-origin: center top;
-    }
-    /* 薄白纱：把插画压淡到正文可读，同时保留插画本身 */
-    .page-bg::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--page-veil);
-    }
-    .page-inner {
-      position: relative;
-      padding: 14px 18px 18px;
-    }
-
-    /* 页头与页脚：直接压在插画上，用淡淡的白纱底提升可读性 */
-    .header {
-      border-bottom: none;
-      margin-bottom: 6px;
-      padding-bottom: 0;
-    }
-    .page-meta {
-      margin-bottom: 8px;
-    }
-
-    /* 榜单行：不包白卡，只用发丝分隔线 + 极淡底分组（避免把插画切成碎片） */
+    /* 榜单页专用：插画整页铺满，文字全部落在深色内容条上 */
     .rank-row .char-list {
       flex: 0 0 320px;
     }
     .rank-row .rank-main {
       flex: 0 0 230px;
     }
-    .rank-row {
-      background: var(--row-veil);
-      border-color: transparent;
-      border-bottom: 1px solid var(--tint-line);
-      border-radius: 8px;
-      box-shadow: none;
-    }
-    .rank-row:last-child {
-      border-bottom: none;
-    }
-    /* 阵容缺失时的占位文字 */
     .char-missing {
       font-size: 18px;
       color: var(--muted-2);
     }
-    /* 榜单无数据提示的上间距 */
     .rank-empty {
       margin-top: 4px;
-    }  </style>
+    }
+  </style>
 </head>
 <body style="zoom:{{renderScale}}">
   <div class="page">
-    <div class="page-bg"></div>
+    <div class="page-bg" style="background-image: url('{{_res_path}}/common/bg-rank.jpg')"></div>
     <div class="page-inner">
-  <div class="header">
-    <div class="game-name">Mhydps-Plugin · DPS 数据库</div>
-    <div class="title">{{if title}}{{title}}{{else}}DPS 数据库榜单{{/if}}</div>
-    {{if subtitle}}
-    <div class="subtitle">{{subtitle}}</div>
-    {{/if}}
-  </div>
-
-  <div class="page-meta">
-    <span>Mhydps-Plugin · DPS 数据库</span>
-    {{if total || total === 0}}<span>共 {{total}} 条</span>{{/if}}
-    {{if totalPages && totalPages > 1}}<span>第 {{page}} / {{totalPages}} 页</span>{{/if}}
-    {{if pageSize}}<span>每页 {{pageSize}} 条</span>{{/if}}
-    {{if fetchedAt}}<span>数据时间：{{fetchedAt}}</span>{{/if}}
-  </div>
-  {{if rows && rows.length > 0}}
-  {{each rows row}}
-  <div class="rank-row">
-    <!-- 名次：前三名金 / 紫 / 蓝高亮 -->
-    <div class="rank-badge{{if row.rank === 1}} rank-badge-gold{{else if row.rank === 2}} rank-badge-purple{{else if row.rank === 3}} rank-badge-blue{{/if}}">{{if row.rank || row.rank === 0}}{{row.rank}}{{else}}—{{/if}}</div>
-
-    <!-- 阵容：4 个角色头像 + 命座角标 -->
-    {{if row.chars && row.chars.length > 0}}
-    <div class="char-list">
-      {{each row.chars c}}
-      <div class="char-item">
-        <div class="avatar">
-          {{if c.avatar}}
-          <img class="avatar-img" src="{{_data_path}}/avatar/{{c.avatar}}.webp"/>
-          {{else}}
-          <div class="avatar-text">{{if c.name}}{{c.name}}{{else}}?{{/if}}</div>
+      <!-- 页头：标题 + 元信息 -->
+      <div class="card head-card">
+        <div class="header">
+          <div class="game-name">Mhydps-Plugin · DPS 数据库</div>
+          <div class="title">{{if title}}{{title}}{{else}}DPS 数据库榜单{{/if}}</div>
+          {{if subtitle}}
+          <div class="subtitle">{{subtitle}}</div>
           {{/if}}
-          {{if c.constellation}}<span class="avatar-con">{{c.constellation}}</span>{{/if}}
         </div>
-        <div class="char-name">{{if c.name}}{{c.name}}{{else}}未知{{/if}}</div>
+        <div class="page-meta">
+          {{if total || total === 0}}<span>共 {{total}} 条</span>{{/if}}
+          {{if totalPages && totalPages > 1}}<span>第 {{page}} / {{totalPages}} 页</span>{{/if}}
+          {{if pageSize}}<span>每页 {{pageSize}} 条</span>{{/if}}
+          {{if fetchedAt}}<span>数据时间：{{fetchedAt}}</span>{{/if}}
+        </div>
       </div>
-      {{/each}}
-    </div>
-    {{else}}
-    <div class="char-list"><span class="char-missing">阵容缺失</span></div>
-    {{/if}}
 
-    <!-- 伤害：优先 damageText，缺失时退回 damage 原始值 -->
-    <div class="rank-main">
-      <div class="rank-value num">{{if row.damageText}}{{row.damageText}}{{else if row.damage}}{{row.damage}}{{else}}—{{/if}}</div>
-      <div class="rank-unit">伤害</div>
-    </div>
+      <!-- 榜单区：一个内容面板内的发丝分隔行 -->
+      <div class="card body-card">
+        {{if rows && rows.length > 0}}
+        {{each rows row}}
+        <div class="rank-row">
+          <!-- 名次：前三名金 / 紫 / 蓝高亮 -->
+          <div class="rank-badge{{if row.rank === 1}} rank-badge-gold{{else if row.rank === 2}} rank-badge-purple{{else if row.rank === 3}} rank-badge-blue{{/if}}">{{if row.rank || row.rank === 0}}{{row.rank}}{{else}}—{{/if}}</div>
 
-    <!-- 金数：主值 + 限定/常驻拆分 -->
-    <div class="cost-box">
-      <div class="cost-value">{{if row.cost || row.cost === 0}}{{row.cost}}{{else}}—{{/if}}</div>
-      <div class="cost-sub">限{{if row.limitcost || row.limitcost === 0}}{{row.limitcost}}{{else}}0{{/if}}/常{{if row.normalcost || row.normalcost === 0}}{{row.normalcost}}{{else}}0{{/if}}</div>
-    </div>
+          <!-- 阵容：4 个角色头像 + 命座角标 -->
+          {{if row.chars && row.chars.length > 0}}
+          <div class="char-list">
+            {{each row.chars c}}
+            <div class="char-item">
+              <div class="avatar">
+                {{if c.avatar}}
+                <img class="avatar-img" src="{{_data_path}}/avatar/{{c.avatar}}.webp"/>
+                {{else}}
+                <div class="avatar-text">{{if c.name}}{{c.name}}{{else}}?{{/if}}</div>
+                {{/if}}
+                {{if c.constellation}}<span class="avatar-con">{{c.constellation}}</span>{{/if}}
+              </div>
+              <div class="char-name">{{if c.name}}{{c.name}}{{else}}未知{{/if}}</div>
+            </div>
+            {{/each}}
+          </div>
+          {{else}}
+          <div class="char-list"><span class="char-missing">阵容缺失</span></div>
+          {{/if}}
 
-    <!-- 标签：原始标签 + 绿玩 / 满级标记 -->
-    <div class="rank-tags">
-      {{if row.tags && row.tags.length > 0}}
-      {{each row.tags t}}
-      <span class="tag">{{t}}</span>
-      {{/each}}
-      {{/if}}
-      {{if row.clean}}<span class="tag tag-clean">绿玩</span>{{/if}}
-      {{if row.lvl}}<span class="tag tag-lvl">满级</span>{{/if}}
-    </div>
+          <!-- 伤害 -->
+          <div class="rank-main">
+            <div class="rank-value num">{{if row.damageText}}{{row.damageText}}{{else if row.damage}}{{row.damage}}{{else}}—{{/if}}</div>
+            <div class="rank-unit">伤害</div>
+          </div>
 
-  </div>
-  {{/each}}
-  {{else}}
-  <div class="empty-hint rank-empty">没有查询到榜单数据，请调整筛选条件或稍后重试</div>
-  {{/if}}
-  <div class="copyright">{{copyright}}</div>
+          <!-- 金数：主值 + 限定/常驻拆分 -->
+          <div class="cost-box">
+            <div class="cost-value">{{if row.cost || row.cost === 0}}{{row.cost}}{{else}}—{{/if}}</div>
+            <div class="cost-sub">限{{if row.limitcost || row.limitcost === 0}}{{row.limitcost}}{{else}}0{{/if}}/常{{if row.normalcost || row.normalcost === 0}}{{row.normalcost}}{{else}}0{{/if}}</div>
+          </div>
+
+          <!-- 标签 -->
+          <div class="rank-tags">
+            {{if row.tags && row.tags.length > 0}}
+            {{each row.tags t}}
+            <span class="tag">{{t}}</span>
+            {{/each}}
+            {{/if}}
+            {{if row.clean}}<span class="tag tag-clean">绿玩</span>{{/if}}
+            {{if row.lvl}}<span class="tag tag-lvl">满级</span>{{/if}}
+          </div>
+        </div>
+        {{/each}}
+        {{else}}
+        <div class="empty-hint rank-empty">没有查询到榜单数据，请调整筛选条件或稍后重试</div>
+        {{/if}}
+      </div>
+
+      <div class="card foot-card">
+        <div class="copyright">{{copyright}}</div>
+      </div>
     </div>
   </div>
 </body>

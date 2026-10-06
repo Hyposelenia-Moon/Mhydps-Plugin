@@ -4,7 +4,8 @@
  * 对应 defSet/config.yaml 模板变量:
  *   mhydps_priority, mhydps_renderScale,
  *   mhydps_proxy, mhydps_timeoutMs,
- *   mhydps_cacheTtlMinutes, mhydps_pageSize, mhydps_avatarEnabled
+ *   mhydps_cacheTtlMinutes, mhydps_pageSize, mhydps_avatarEnabled,
+ *   mhydps_defaultUid, mhydps_profileImgDir, mhydps_miaoResDir
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -33,7 +34,10 @@ const TEMPLATE_VARS = {
   timeoutMs: 'mhydps_timeoutMs',
   cacheTtlMinutes: 'mhydps_cacheTtlMinutes',
   pageSize: 'mhydps_pageSize',
-  avatarEnabled: 'mhydps_avatarEnabled'
+  avatarEnabled: 'mhydps_avatarEnabled',
+  defaultUid: 'mhydps_defaultUid',
+  profileImgDir: 'mhydps_profileImgDir',
+  miaoResDir: 'mhydps_miaoResDir'
 }
 
 /** 默认值（模板变量替换时的兜底） */
@@ -44,7 +48,10 @@ const DEFAULTS = {
   mhydps_timeoutMs: '30000',
   mhydps_cacheTtlMinutes: '30',
   mhydps_pageSize: '10',
-  mhydps_avatarEnabled: 'true'
+  mhydps_avatarEnabled: 'true',
+  mhydps_defaultUid: '',
+  mhydps_profileImgDir: '',
+  mhydps_miaoResDir: ''
 }
 
 /**
@@ -153,6 +160,36 @@ export function supportGuoba () {
           component: 'Switch',
           required: true,
           componentProps: { defaultValue: true }
+        },
+
+        // ==================== 练度查询 ====================
+        { label: '练度查询', component: 'SOFT_GROUP_BEGIN' },
+        {
+          field: 'defaultUid',
+          label: '默认 UID',
+          helpMessage: '命令里不写 UID 时用它',
+          bottomHelpMessage: '填了以后可以直接「#DPS练度查询 胡桃」。留空则必须带 9 位 UID',
+          component: 'Input',
+          required: false,
+          componentProps: { placeholder: '123456789' }
+        },
+        {
+          field: 'profileImgDir',
+          label: '面板立绘图库目录',
+          helpMessage: '含 normal-character 的那一层目录，留空 = 自动探测',
+          bottomHelpMessage: '自动探测 plugins/ProfileImg-Plugin/.../miao-plugin-ProfileImg → plugins/miao-plugin/resources/profile。图库需自行安装（AxiuCN/miao-plugin-ProfileImg），插件不随包分发图片',
+          component: 'Input',
+          required: false,
+          componentProps: { placeholder: '留空 = 自动探测' }
+        },
+        {
+          field: 'miaoResDir',
+          label: 'miao-plugin 资源目录',
+          helpMessage: '面板图标（命座/武器/圣遗物）来源，留空 = 自动探测',
+          bottomHelpMessage: '自动探测 plugins/miao-plugin/resources。没装 miao-plugin 时面板照常出图，只是不显示图标',
+          component: 'Input',
+          required: false,
+          componentProps: { placeholder: '留空 = 自动探测' }
         }
       ],
 
@@ -165,7 +202,10 @@ export function supportGuoba () {
           timeoutMs: cfg.timeoutMs ?? 30000,
           cacheTtlMinutes: cfg.cacheTtlMinutes ?? 30,
           pageSize: cfg.pageSize ?? 10,
-          avatarEnabled: cfg.avatarEnabled ?? true
+          avatarEnabled: cfg.avatarEnabled ?? true,
+          defaultUid: cfg.defaultUid ?? '',
+          profileImgDir: cfg.profileImgDir ?? '',
+          miaoResDir: cfg.miaoResDir ?? ''
         }
       },
 

@@ -71,7 +71,10 @@ const submitted = {
   timeoutMs: 45000,
   cacheTtlMinutes: 15,
   pageSize: 20,
-  avatarEnabled: false
+  avatarEnabled: false,
+  defaultUid: '100000000',
+  profileImgDir: 'D:/img/miao-plugin-ProfileImg',
+  miaoResDir: 'D:/bot/plugins/miao-plugin/resources'
 }
 
 const saved = await configInfo.setConfigData(submitted, { Result })
@@ -93,6 +96,9 @@ check('写入可被 YAML 解析', (() => {
 const written = YAML.parse(writtenText)
 check('写入值正确', written.priority === 7000 && written.renderScale === 2 && written.avatarEnabled === false)
 check('代理值正确', written.proxy === 'http://proxy.example:8080')
+check('练度查询三项也已写入', written.defaultUid === '100000000' &&
+  written.profileImgDir === 'D:/img/miao-plugin-ProfileImg' &&
+  written.miaoResDir === 'D:/bot/plugins/miao-plugin/resources', JSON.stringify(written))
 
 const roundTrip = configInfo.getConfigData()
 check('读回与提交一致', fields.every(f => JSON.stringify(roundTrip[f]) === JSON.stringify(submitted[f])), JSON.stringify(roundTrip))

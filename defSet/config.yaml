@@ -23,3 +23,15 @@ pageSize: ${mhydps_pageSize}
 
 # 是否缓存并渲染角色立绘
 avatarEnabled: ${mhydps_avatarEnabled}
+
+# ---------- 练度查询 ----------
+# 默认 UID：命令里不写 UID 时用它（如「#DPS练度查询 胡桃」）
+defaultUid: "${mhydps_defaultUid}"
+
+# 面板立绘图库根目录（含 normal-character 那一层），留空 = 自动探测
+# 自动探测顺序：plugins/ProfileImg-Plugin/resources/gallery/ProfileImg/miao-plugin-ProfileImg
+#              → plugins/miao-plugin/resources/profile
+profileImgDir: "${mhydps_profileImgDir}"
+
+# miao-plugin 的 resources 目录（面板图标来源），留空 = 自动探测 plugins/miao-plugin/resources
+miaoResDir: "${mhydps_miaoResDir}"

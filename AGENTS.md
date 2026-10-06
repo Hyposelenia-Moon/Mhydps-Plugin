@@ -89,14 +89,26 @@ config/config.yaml.example  ← 参考默认值（入库，首次启动自动复
 
 - 模板在 `resources/dps/*.html`，art-template 语法；`{{_res_path}}` / `{{_data_path}}` / `{{renderScale}}` / `{{copyright}}` 由 `components/render.js` 注入。
 - 模板内不写 `<script>`；字体随包分发（见下一条），不引用站外字体。
-- **配色只写在 `resources/common/base.css` 的 `:root` 变量块**（当前为白底浅色一套）：`components.css` 与 5 个模板一律 `var(--x)`，不得写死色值；这条由 `render-templates` 套件守门（残留深色主题色或模板里出现 hex/rgba 都会红）。
+- **配色只写在 `resources/common/base.css` 的 `:root` 变量块**（当前为深色插画一套）：`components.css` 与 5 个模板一律 `var(--x)`，不得写死色值；这条由 `render-templates` 套件守门（模板里出现 hex/rgba 或遗留旧令牌都会红）。
+  - **唯一例外**：`resources/profile/panel.css`（练度面板）按需求逐条照抄 miao-plugin `profile-detail` 的固定色值，套件对它单独豁免；不要把它的色值搬进共享组件，也不要拿它的写法去改其它页面。
 - **字体也只写在 `base.css`**：`@font-face` 声明原神字体（`resources/common/font/HYWH-65W.woff` 中文 + `tttgbnumber` 数字，随包分发、不联网下载），字体栈把数字字体排在最前；模板不得出现 `font-family`（套件会检查）。换字体 = 换文件 + 改这段声明。
 - 榜单行版式对齐站点：名次徽章 → 4 个描金圆环头像（右上角圆形命座数字，仅数字不带 C）→ 大号伤害数字（34px）→ 金数（27px）→ 标签（18px）。**行尾不放视频列**，视频链接走 `#DPS榜视频 <名次>`。
-- 帮助图内容来自 `resources/help/help-cfg.js`，版式是「顶部插画横幅 + 白底容器（副标题行 / 分组标题条 / 三列指令网格）」，每项只有 `title` / `desc` 两个字段——**不要加回语法块 / 参数表 / 示例块**（`help-config` 套件会因条目出现多余字段而报红）。参数写法请直接落成可照抄的命令条目（如 `#DPS榜 金≤12`）。
-- 两页的插画是**整页覆盖**（`resources/common/bg-rank.jpg` / `bg-help.jpg`）：背景图生成时抬暗部（`crop-background.ps1 -ShadowLift`），渲染时 `filter: blur(--bg-blur)` + `--page-veil` 薄白纱，**正文不包白卡**（白卡会把插画切成一条条碎片）。
-- **不要去掉抬暗部或大幅调低 `--page-veil`**：整页覆盖时正文会压在插画最暗处，未抬暗部时深色小字只有 1.9:1。改完必须跑 `tool/background/fullpage-contrast.ps1` 复核（当前 rank/help 均 0/9 失败）。
+- 帮助图内容来自 `resources/help/help-cfg.js`，版式是「整页插画底 + 深色内容条（副标题行 / 分组标题条 / 三列指令网格）」，每项只有 `title` / `desc` 两个字段——**不要加回语法块 / 参数表 / 示例块**（`help-config` 套件会因条目出现多余字段而报红）。参数写法请直接落成可照抄的命令条目（如 `#DPS榜 金≤12`）。
+- 5 个页面都是**整页插画底**（`resources/common/bg-rank|raid|build|help|status.jpg`）：图片来自 `纯享壁纸/哥伦比娅3/4`，由 `tool/background/crop-background.ps1` 按页面长宽比裁切生成（不抬暗部）；渲染时 `.page-bg` 打底、`--scrim` 统一压暗，`filter: blur(--bg-blur)` 只作可调项（当前 0）。
+- 页面四周只留 **8~10px 边框**（`body` 与 `.page-inner` 的 padding 都是 `8px 10px 10px`）：这就是出图里插画与画面边缘之间的距离，调大等于白白吃掉内容宽度；卡片内边距同理保持在 10px 上下。
+- **正文一律落在 `--card` / `--chip` 深色内容条上，不要把文字直接压插画**：文字直接压插画时，浅色小字必须把插画洗到极淡（实测 help 暗部 `#4b315c` 上深色小字仅 1.9:1）才可能达标；「插画 + 内容条」让插画与文字各自有独立的对比基准。调 `--scrim` / `--card` 后必须跑 `test/contrast.test.mjs`（它按令牌现算最坏情况，纯白插画为界）。
+- 迭代配色时可用 `tool/background/fullpage-contrast.ps1` 对真实底图取点复核；剪影/取色脚本只作一次性诊断，不进仓库。
 - **改文字色或调蒙版后必须跑 `test/contrast.test.mjs`**（离线按令牌现算 WCAG：正文 ≥4.5:1、大字 ≥3:1、最小字号 ≥14px）；换了背景图还要跑 `tool/background/hero-contrast.ps1` 复核横幅文字。
 - `components/render.js` 的 `RES_PREFIX` 层级依赖框架把 HTML 写到 `temp/html/<插件名>/<APP>/<tpl>/`，改动模板命名前先读该文件注释。
+
+### 练度面板（`#DPS练度查询`）
+
+- 版式照 miao-plugin（AxiuCN 版）的 `profile-detail`：一屏一角色（600px 卡）→ 立绘铺满 + 右侧名字/等级/命座 → 三枚天赋圆徽章 → 属性表（交错暗行 + `i-*` 图标）→ 6 枚命座圆图标 → 5 张圣遗物卡 + 武器卡（含被动文案）。改版式时对照 `plugins/miao-plugin/resources/character/profile-detail.{html,css}`，不要凭印象改。
+- 面板素材（图库立绘 / 命座 / 武器 / 圣遗物图标 / 武器文案 / 属性图标雪碧图）全部走 `model/PanelAssets.js`：**只读引用本机已安装的 ProfileImg 图库与 miao-plugin，绝不入库**（图库 300MB+ 且禁止商用，本插件是 GPL 仓库）。
+- 目录探测顺序固定为「环境变量 `MHYDPS_PROFILE_IMG` / `MHYDPS_MIAO_RES` → 配置 `profileImgDir` / `miaoResDir` → 本机默认路径」；**任何素材缺失都必须降级而不是抛错**：立绘退回官方立绘 → 站点立绘 → 空（模板不裂图），图标缺失整块不渲染。
+- 素材按需复制到 `data/panel/`（gitignore），文件名带 `avatarId` 以保持同一角色每次同一张图；改选图规则时同步 `test/panel-assets.test.mjs`。
+- 面板页**不做对比度守门**（miao 的文字直接压在立绘上），这是明确接受的取舍；`test/contrast.test.mjs` 只保留「直接落在插画上的容器必须自带足够暗的垫底」这一条底线。
+- `#DPS练度查询` 支持带角色名筛选（`parseBuildArgs` → `pickAvatarsByNames`）：角色名/别名经角色表解析成 `avatarId` 再过滤；**关键词全都不是角色名时不当作筛选**（原样出全部 + 一行「未识别的参数」），命中角色名但该号没有该角色才算筛选落空。
 
 ### 日志与注释
 

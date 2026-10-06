@@ -33,6 +33,7 @@ pnpm install            # 在插件目录执行；或把插件放进 bot 的 plu
 
 - 榜单类套件用 `test/fixtures/teams.sample.json`、`teams2.sample.json`（站点 `/api/teams`、`/api/teams2` 的字段结构，值已改写）。
 - 练度类套件用 `test/fixtures/enka.sample.json`（Enka 结构的最小样例）。
+- 面板素材类套件不读真实安装：用 `MHYDPS_PROFILE_IMG` / `MHYDPS_MIAO_RES` 指向 `test/.test-tmp/` 里自建的假图库与假 miao 资源目录。
 - **套件不发真实请求**：真实接口的正确性只能靠人工验证（`#DPS更新` + 三条查询命令）。
 
 ## 约定
@@ -72,3 +73,7 @@ test/
 | `help-config` | 帮助配置结构契约（字段齐全、标题以 # 开头、主人分组） |
 | `guoba-config` | 配置三层同构：模板占位符 ↔ 面板字段 ↔ 默认配置 + 真实往返 |
 | `render-templates` | 5 个模板真实渲染出图，且模板内资源/头像相对路径能解析到文件 |
+| `command-routing` | 各入口正则的匹配边界（谁的词归谁，`#DPS练度查询 胡桃` 不被榜单/视频抢走） |
+| `video-lookup` | 名次取词、按名次取视频、越界与空结果的兜底文案 |
+| `contrast` | 深色主题令牌的 WCAG AA 现算 + 最小字号 + 「直接压在插画上的容器必须自带暗底」 |
+| `panel-assets` | 练度面板素材：图库/miao 目录探测、稳定选图、图标与武器文案查找、素材缺失时的降级 |

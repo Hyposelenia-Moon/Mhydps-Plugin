@@ -42,8 +42,14 @@ export const AVATAR_DIR = 'avatar'
 /** 榜单每页上限（配置里的 pageSize 不得超过它） */
 export const MAX_PAGE_SIZE = 20
 
-/** 单次渲染最多展示的角色数（练度查询一次最多渲染 12 个角色，超出截断） */
-export const MAX_BUILD_CHARS = 12
+/**
+ * 单次渲染最多展示的角色数
+ *
+ * 练度面板是「一屏一角色」的 miao 版式，单个角色约 1250px 高（渲染缩放 1.5 时）。
+ * 取 6 是刻意的：再多会顶到 Chromium 出图的高度上限（约 16384px），
+ * 想看更多角色就用 `#DPS练度查询 <角色> <UID>` 挨个看。
+ */
+export const MAX_BUILD_CHARS = 6
 
 /** 元素英文 → 中文（与站点角色表 element 字段对应） */
 export const ELEMENT_CN = {
@@ -148,15 +154,16 @@ export const EQUIP_SLOT_ORDER = ['EQUIP_BRACER', 'EQUIP_NECKLACE', 'EQUIP_SHOES'
 /**
  * 角色面板要展示的属性（fightPropMap 的键 → 标签）
  * 20/22/23 是 0~1 的小数（百分比），其余是绝对值
+ * `icon` 是 miao 属性图标雪碧图的类名（练度面板照抄 miao 的 .i-* 位置）
  */
 export const PANEL_PROPS = [
-  { key: '2000', label: '生命值', percent: false },
-  { key: '2001', label: '攻击力', percent: false },
-  { key: '2002', label: '防御力', percent: false },
-  { key: '28', label: '元素精通', percent: false },
-  { key: '20', label: '暴击率', percent: true },
-  { key: '22', label: '暴击伤害', percent: true },
-  { key: '23', label: '元素充能效率', percent: true }
+  { key: '2000', label: '生命值', percent: false, icon: 'i-hp' },
+  { key: '2001', label: '攻击力', percent: false, icon: 'i-atk' },
+  { key: '2002', label: '防御力', percent: false, icon: 'i-def' },
+  { key: '28', label: '元素精通', percent: false, icon: 'i-mastery' },
+  { key: '20', label: '暴击率', percent: true, icon: 'i-cpct' },
+  { key: '22', label: '暴击伤害', percent: true, icon: 'i-cdmg' },
+  { key: '23', label: '元素充能效率', percent: true, icon: 'i-recharge' }
 ]
 
 /** 天赋位次（Enka skillLevelMap 键的末位）→ 中文 */

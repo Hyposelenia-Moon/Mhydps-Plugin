@@ -122,6 +122,10 @@ export function buildText (result, title = '#DPS练度查询') {
     `等级 ${p.level}　世界等级 ${p.worldLevel}　公开角色 ${result.total}${result.truncated ? `（仅展示前 ${result.chars.length} 个）` : ''}`,
     ''
   ]
+  if (result.filtered) {
+    lines.splice(1, 0, `筛选：命中 ${result.chars.length} 个角色`)
+  }
+  if (result.unknown?.length) lines.splice(1, 0, `未识别的参数：${result.unknown.join('、')}`)
   for (const c of result.chars) {
     lines.push(`【${c.name}】Lv.${c.level}　${c.elementCn}　${c.constellation}命　天赋 ${c.talentText || '-'}`)
     if (c.weapon) lines.push(`　武器：${c.weapon.name} Lv.${c.weapon.level} 精${c.weapon.refine}`)
@@ -137,7 +141,11 @@ export function buildText (result, title = '#DPS练度查询') {
     }
     lines.push('')
   }
-  if (!result.chars.length) lines.push('该 UID 未公开角色详情（游戏内「角色详情」需设为公开）')
+  if (!result.chars.length) {
+    lines.push(result.filtered
+      ? `该 UID 的公开角色里没有：${(result.unknown || []).join('、') || '指定角色'}（公开角色共 ${result.roster?.length || 0} 个）`
+      : '该 UID 未公开角色详情（游戏内「角色详情」需设为公开）')
+  }
   lines.push(`数据：Enka Network（经 ${SITE_NAME} 代理）`)
   return lines.join('\n')
 }
