@@ -1,4 +1,79 @@
-/* Mhydps-Plugin 基础样式 — 深色科技风主题（配色对齐 mhydps.cn） */
+/* Mhydps-Plugin 基础样式 — 浅色主题（白底）
+ *
+ * 配色全部收敛到 :root 的 CSS 变量：
+ *   组件样式（components.css）与各模板行内 <style> 只引用 var(--x)，不写死颜色值。
+ *   换主题时只改这一块，模板与组件无需改动。
+ */
+
+:root {
+  /* ===== 底色：页面纯白（渲染图要求白底） ===== */
+  --bg: #ffffff;
+
+  /* ===== 卡面与内嵌块 =====
+     白底上卡面同为白色，靠描边 + 浅阴影区分层级 */
+  --card: #ffffff;
+  --card-2: #f6f7fa;          /* 卡内嵌块（头像占位、属性格） */
+  --card-3: #eef0f6;          /* 更沉一档（空状态底） */
+
+  /* ===== 描边 ===== */
+  --line: #e3e6ee;            /* 主描边（卡片、行） */
+  --line-soft: #eef0f5;       /* 次描边（行分隔） */
+  --line-strong: #d4d8e3;     /* 强描边（虚线占位） */
+  --shadow: 0 1px 2px rgba(20, 26, 40, 0.05);
+
+  /* ===== 文字 ===== */
+  --text: #1e2230;            /* 主文字 / 数值 */
+  --text-2: #4c5265;          /* 次级文字（角色名、首领名） */
+  --muted: #828899;           /* 弱化文字（说明、标签名） */
+  --muted-2: #9aa0b0;         /* 更弱（占位、页脚） */
+
+  /* ===== 强调色（白底上整体压暗一档以保住对比度） ===== */
+  --accent: #2a7ad6;          /* 蓝：插件名、卡片标题竖线、页码数值 */
+  --accent-2: #7c4dcc;        /* 紫：版本标签、附注 */
+  --gold: #a97600;            /* 金：伤害数值等金色文字 */
+  --gold-2: #c89500;          /* 金强调：命座角标描边 */
+  --green: #12855a;           /* 绿：绿玩 */
+  --red: #c0453f;             /* 红：视频标记、错误 */
+
+  /* ===== 低透明底与描边（胶囊标签、属性格） ===== */
+  --accent-soft: rgba(42, 122, 214, 0.10);
+  --accent-line: rgba(42, 122, 214, 0.32);
+  --purple-soft: rgba(124, 77, 204, 0.10);
+  --purple-line: rgba(124, 77, 204, 0.30);
+  --gold-soft: rgba(169, 118, 0, 0.10);
+  --gold-line: rgba(169, 118, 0, 0.32);
+  --green-soft: rgba(18, 133, 90, 0.10);
+  --green-line: rgba(18, 133, 90, 0.30);
+  --red-soft: rgba(192, 69, 63, 0.09);
+  --red-line: rgba(192, 69, 63, 0.30);
+  --tint: rgba(30, 34, 48, 0.04);        /* 中性浅底 */
+  --tint-line: rgba(30, 34, 48, 0.10);   /* 中性浅描边 */
+
+  /* ===== 名次徽标（4 名及以后） ===== */
+  --rank-bg: #f1f3f8;
+  --rank-line: #dfe3ec;
+  --rank-text: #4c5265;
+
+  /* ===== 名次徽标（前三名渐变） ===== */
+  --rank-1-from: #ffdf7a;
+  --rank-1-to: #f0b400;
+  --rank-1-text: #4a3400;
+  --rank-2-from: #c39bff;
+  --rank-2-to: #8b5cf6;
+  --rank-2-text: #ffffff;
+  --rank-3-from: #7db8f2;
+  --rank-3-to: #2a7ad6;
+  --rank-3-text: #ffffff;
+
+  /* ===== 七元素配色（白底可读） ===== */
+  --elem-pyro: #d0452a;
+  --elem-hydro: #1f7fc4;
+  --elem-anemo: #15907a;
+  --elem-electro: #7a4ddb;
+  --elem-dendro: #5c9421;
+  --elem-cryo: #188ba8;
+  --elem-geo: #a97600;
+}
 
 /* ===== 全局重置：清掉默认内外边距，统一盒模型 ===== */
 * {
@@ -7,16 +82,13 @@
   box-sizing: border-box;
 }
 
-/* ===== 页面基础：深色底 + 顶部冷光晕，宽度随内容自适应 ===== */
+/* ===== 页面基础：白底、宽度随内容自适应 ===== */
 body {
   font-family: 'MiSans', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
   font-size: 20px;
   line-height: 1.55;
-  color: #e8e8f2;
-  background-color: #12121a;
-  background-image:
-    radial-gradient(900px 320px at 6% -8%, rgba(74, 158, 255, 0.13), transparent 70%),
-    radial-gradient(900px 320px at 94% -8%, rgba(168, 85, 247, 0.10), transparent 70%);
+  color: var(--text);
+  background-color: var(--bg);
   /* 宽度自适应内容：只给上下限，不写死 1920px 之类的固定宽度 */
   width: fit-content;
   min-width: 780px;
@@ -31,10 +103,22 @@ img {
 
 /* ===== 弱化文本 .dim：次级说明文字统一使用 ===== */
 .dim {
-  color: #9a9ab4;
+  color: var(--muted);
 }
 
 /* ===== 等宽数字 .num：榜单/面板数值对齐更整齐 ===== */
 .num {
   font-variant-numeric: tabular-nums;
+}
+
+/* ===== 行内代码 .code：命令与参数示例（帮助页、状态页共用） ===== */
+.code {
+  font-family: 'Cascadia Mono', 'Consolas', 'Courier New', monospace;
+  font-size: 0.92em;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: var(--tint);
+  border: 1px solid var(--tint-line);
+  color: var(--text);
+  white-space: nowrap;
 }

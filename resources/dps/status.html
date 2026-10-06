@@ -12,13 +12,15 @@
       gap: 12px;
       align-items: flex-start;
     }
-    /* 单张状态卡：固定宽度保证多卡并排时整齐 */
+    /* 单张状态卡：宽度随内容（代理地址这类长值不折行），多卡并排靠 flex 换行 */
     .status-card {
-      flex: 0 0 350px;
-      background: #1b1b26;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      flex: 0 0 auto;
+      min-width: 350px;
+      background: var(--card);
+      border: 1px solid var(--line);
       border-radius: 10px;
       padding: 12px 16px;
+      box-shadow: var(--shadow);
     }
     /* 数据源卡片独占整行，条数长列表更好读 */
     .status-card-wide {
@@ -27,7 +29,7 @@
     /* 卡片内的说明/兜底文字 */
     .status-note {
       font-size: 18px;
-      color: #9a9ab4;
+      color: var(--muted);
       padding: 4px 0;
     }
   </style>
