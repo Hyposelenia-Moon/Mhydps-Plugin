@@ -122,8 +122,9 @@ if (rank.html) {
   check('rank：渲染了伤害与金数', rank.html.includes('323.0 万') && rank.html.includes('48'))
   check('rank：渲染了名次', rank.html.includes('rank-badge') || rank.html.includes('rank'))
   check('rank：页脚带版权行', rank.html.includes('mhydps.cn'))
-  check('rank：顶部插画横幅已铺上', rank.html.includes('bg-rank.jpg') && rank.html.includes('page-hero'))
-  check('rank：标题在横幅、元信息在白底区', rank.html.includes('hero-body') && rank.html.includes('page-meta'))
+  check('rank：插画整页覆盖（模糊 + 薄白纱）', rank.html.includes('bg-rank.jpg') && rank.html.includes('page-bg') && rank.html.includes('var(--page-veil)'))
+  check('rank：正文不再包白卡（避免把插画切成碎片）', rank.html.includes('page-inner') && !rank.html.includes('page-sheet'))
+  check('rank：已移除行尾视频列', !rank.html.includes('rank-side') && !rank.html.includes('video-mark'))
   check('rank：横幅文字用白色令牌', rank.html.includes('var(--hero-text)') && rank.html.includes('var(--hero-scrim)'))
 }
 
@@ -145,6 +146,7 @@ if (raid.html) {
   checkRefs(raid.html, path.dirname(path.join(appRoot, 'temp', 'html', 'Mhydps-Plugin', 'dps', 'raid', 'x.html')), 'raid', /(?:href|src)="([^"]+)"/g)
   check('raid：渲染了首领与版本', raid.html.includes('矮灵雕刻师') && raid.html.includes('7.1'))
   check('raid：渲染了耗时', raid.html.includes('>24<') && raid.html.includes('秒'))
+  check('raid：已移除行尾视频列', !raid.html.includes('rank-side') && !raid.html.includes('video-mark'))
 }
 
 // ---- build ----
@@ -210,7 +212,9 @@ if (help.html) {
   check('help：条目含命令与说明', help.html.includes('entry-cmd') && help.html.includes('entry-desc'))
   check('help：说明文案来自配置', help.html.includes('只看无宏、无连点的记录'))
   check('help：页头有版本行', help.html.includes('hero-plugin') && help.html.includes('Mhydps-Plugin 1.0.0'))
-  check('help：顶部插画横幅已铺上', help.html.includes('bg-help.jpg') && help.html.includes('page-hero'))
+  check('help：插画整页覆盖（模糊 + 薄白纱）', help.html.includes('bg-help.jpg') && help.html.includes('page-bg') && help.html.includes('var(--page-veil)'))
+  check('help：正文不再包白卡', help.html.includes('page-inner') && !help.html.includes('page-sheet'))
+  check('help：副标题与版本行仍在小字区', help.html.includes('sheet-head'))
   check('help：标题在横幅内、小字在白底区', help.html.includes('hero-title') && help.html.includes('sheet-head'))
   check('help：横幅文字用白色令牌', help.html.includes('var(--hero-text)') && help.html.includes('var(--hero-scrim)'))
   check('help：不再渲染参数表/快速上手/示例块', !help.html.includes('help-args') && !help.html.includes('快速上手') && !help.html.includes('help-example'))

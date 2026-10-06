@@ -340,13 +340,13 @@
 
 /* ===== 金数区 .cost-box ===== */
 .cost-box {
-  flex: 0 0 108px;
+  flex: 0 0 142px;
   text-align: center;
 }
 
 /* ===== 金数主值 .cost-value ===== */
 .cost-value {
-  font-size: 22px;
+  font-size: 27px;
   font-weight: 700;
   color: var(--text);
   line-height: 1.25;
@@ -355,24 +355,18 @@
 
 /* ===== 金数副标 .cost-sub（限x/常x） ===== */
 .cost-sub {
-  font-size: 16px;
+  font-size: 18px;
   color: var(--muted);
 }
 
 /* ===== 标签区 .rank-tags（占用剩余宽度，自动换行） ===== */
 .rank-tags {
   flex: 1 1 auto;
-  min-width: 150px;
+  min-width: 190px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-}
-
-/* ===== 行尾标记区 .rank-side（视频等） ===== */
-.rank-side {
-  flex: 0 0 56px;
-  text-align: right;
 }
 
 /* ===== 首领名 .rank-boss（危战榜单） ===== */
@@ -389,9 +383,9 @@
 /* ===== 普通标签 .tag（蓝） ===== */
 .tag {
   display: inline-block;
-  padding: 1px 9px;
+  padding: 2px 11px;
   border-radius: 999px;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.5;
   color: var(--accent);
   background: var(--accent-soft);
@@ -418,19 +412,6 @@
   color: var(--accent-2);
   background: var(--purple-soft);
   border-color: var(--purple-line);
-}
-
-/* ===== 视频标记 .video-mark（存在 video 链接时显示） ===== */
-.video-mark {
-  display: inline-block;
-  padding: 1px 8px;
-  border-radius: 6px;
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--red);
-  background: var(--red-soft);
-  border: 1px solid var(--red-line);
-  white-space: nowrap;
 }
 
 /* ═══════════════════════════════════════════════════════════

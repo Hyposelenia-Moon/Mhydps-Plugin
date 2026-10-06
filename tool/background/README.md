@@ -1,49 +1,56 @@
-# tool/background — 背景图裁切与横幅文字对比度审计
+# tool/background — 背景图生成与对比度审计
 
-榜单页 / 帮助页的插画**只出现在顶部横幅里**（满强度、不加白蒙版），正文全部落在下方白底容器上——这样插画不被洗淡、正文对比度以纯白为基准，两者不再互相妥协。
+榜单页 / 帮助页的插画**整页覆盖**（`background-size: cover`），并在 CSS 里做两层处理：
 
-两个脚本都用 .NET `System.Drawing`，无需额外依赖，Windows PowerShell 5.1 可直接跑。
+```
+插画（已抬暗部）→ filter: blur(var(--bg-blur)) → --page-veil 薄白纱 → 正文直接压在上面
+```
 
-## 1. 裁横幅图：`crop-background.ps1`
+**为什么必须抬暗部 + 模糊**：整页覆盖时正文会压在插画最暗的像素上。实测未处理时 help 插画的暗部是 `#4b315c`（相对亮度 0.09），深色小字压上去只有 1.9:1。抬暗部（生成图片时就做）把最暗处抬到约 `#c3acd7`、模糊再把局部明暗压平，这样薄白纱只需要 0.44 就能让全部文字达标，插画本身仍然清晰可见。
+
+两个脚本都用 .NET `System.Drawing`，无需额外依赖，Windows PowerShell 5.1 可直接跑（**纯 ASCII 脚本 + 参数传中文路径**：PS 5.1 按 ANSI 读脚本文件，脚本内写中文会解析失败）。
+
+## 1. 生成背景图：`crop-background.ps1`
 
 ```powershell
-# 横幅尺寸：rank 1086x210 CSS、help 1156x250 CSS（renderScale 1.5 下分别为 1629x315 / 1734x375）
+# 按「实际出图长宽比」裁窗口；-ShadowLift 抬暗部（0~0.8）
 powershell -NoProfile -ExecutionPolicy Bypass -File tool\background\crop-background.ps1 `
-  -Src "D:\...\哥伦比娅3.jpeg" -Out "resources\common\bg-rank.jpg" -Aspect 0.573 -Y 1500 -OutWidth 1200 -Quality 80
+  -Src "D:\...\哥伦比娅3.jpeg" -Out "resources\common\bg-rank.jpg" `
+  -Aspect 0.70 -Y 1600 -OutWidth 1200 -Quality 80 -ShadowLift 0.64
 ```
 
-- `-Aspect` 传「宽 / 高」；脚本按素材宽度算出窗口高度，再缩放到 `-OutWidth`
-- `-Y` 指定窗口顶部（`-1` 则自动挑最亮窗口）；**取景要让角色头部落在横幅中上部**，因为横幅底部是深色渐变区（放标题）
-- 纯 ASCII 脚本 + 参数传中文路径：PowerShell 5.1 按 ANSI 读脚本文件，脚本内写中文会解析失败
+- `-Aspect` 传「宽 / 高」；`-Y` 指定窗口顶部（`-1` 自动挑最亮窗口）
+- `-ShadowLift L`：曲线 `out = 255 × (L + (1-L) × (in/255)^0.9)`，只抬暗部、亮部保持 255。当前定稿 **0.64**
+- 取景要让角色头部落在画面上部（整页覆盖时不会有横幅裁切问题，但顶部是页头文字区）
 
-当前素材与取景：
+当前素材与参数：
 
-| 文件 | 素材 | 取景 |
-|------|------|------|
-| `resources/common/bg-rank.jpg` | `哥伦比娅3.jpeg`（1500×9000 长图） | 1500..4000 段 → 1200×2000，缩放到横幅后取 15% 位置 |
-| `resources/common/bg-help.jpg` | `哥伦比娅4.png`（1080×1920） | 顶部 941px → 1080×941，横幅取 26% 位置 |
+| 文件 | 素材 | 窗口 | ShadowLift |
+|------|------|------|-----------|
+| `resources/common/bg-rank.jpg` | `哥伦比娅3.jpeg`（1500×9000 长图） | y=1600 起、比例 0.70 → 1200×1714 | 0.64 |
+| `resources/common/bg-help.jpg` | `哥伦比娅4.png`（1080×1920） | y=0 起、比例 1.02 → 1079×1058 | 0.64 |
 
-## 2. 横幅文字对比度审计：`hero-contrast.ps1`
+## 2. 对比度审计：`fullpage-contrast.ps1`
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tool\background\hero-contrast.ps1 `
-  -BgRank resources\common\bg-rank.jpg -BgHelp resources\common\bg-help.jpg
+powershell -NoProfile -ExecutionPolicy Bypass -File tool\background\fullpage-contrast.ps1 `
+  -BgRank resources\common\bg-rank.jpg -BgHelp resources\common\bg-help.jpg -Veil 0.44
 ```
 
-按**原图 + CSS 渐变公式**复算（不采样成图，避免文字抗锯齿像素干扰），对横幅内文字带取最亮等效底色，再算白字对比度：
-
-- 横幅只放**大号标题**（rank 30px / help 34px）→ 阈值 3.0:1
-- 小字（副标题、版本行、条数时间）一律放白底区，按纯白基准判定（阈值 4.5:1）
-- 最近一次结果：rank **10.20:1** ✓（need 3.0）｜help **15.02:1** ✓（need 3.0）
+- 把插画降采样到 1/28 再取像素 → 等价于「重度模糊后的局部均值」，取**最暗**像素作为深色文字的最坏底
+- 按 WCAG 2.1 判定：正文 ≥4.5:1、大字 ≥3:1
+- 元素色（火/水/冰…）不在此审计内：它们只出现在练度页（白底），由 `test/contrast.test.mjs` 覆盖
+- 最近一次结果：rank **0/9 失败**（最低 muted-2 4.66:1）｜help **0/9 失败**（最低 4.80:1）
 
 ## 3. 离线守门：`test/contrast.test.mjs`
 
-改配色后不用跑上面的脚本也能拦住回归：该套件从 `base.css` 现算令牌对比度（正文 ≥4.5:1、大字 ≥3:1）+ 全项目最小字号 ≥14px，`pnpm test` 里一起跑。
+改配色后不必跑上面的脚本：该套件从 `base.css` 现算令牌对比度 + 全项目最小字号（≥14px），随 `pnpm test` 一起跑。
 
 ## 令牌现状
 
 | 令牌 | 值 | 作用 |
 |------|----|------|
-| `--hero-scrim` | `linear-gradient(0 → 0.72@62% → 0.85@72% → 0.90)` | 横幅底部深色渐变，托住白字；上段（0~34%）完全透明，插画满强度 |
-| `--hero-text` / `--hero-text-sub` | 白 / 白 0.86 | 横幅内文字色 |
-| `--hero-radius` | 12px | 横幅与白底容器圆角 |
+| `--bg-blur` | 18px | 插画模糊半径；调 0 可关（文字可读性会下降） |
+| `--page-veil` | 0.44 | 薄白纱；调低插画更鲜艳、深色小字对比度下降 |
+| `--row-veil` | 0.26 | 榜单行 / 帮助分组条的极淡底色（不用不透明白卡，避免把插画切成碎片） |
+| `--radius` | 12px | 卡片与容器圆角 |

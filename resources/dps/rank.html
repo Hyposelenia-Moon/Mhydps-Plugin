@@ -5,67 +5,64 @@
   <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/base.css"/>
   <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/components.css"/>
   <style>
-    /* 榜单页专用：顶部插画横幅（满强度）+ 下方白底榜单区 */
+    /* 榜单页专用：插画整页覆盖（轻模糊 + 薄白纱），正文直接压在上面 */
 
-    /* ===== 顶部横幅：插画铺满，不加任何白蒙版；底部压一层深色渐变托住标题文字 ===== */
-    .page-hero {
+    body {
+      padding: 0;
+    }
+    .page {
       position: relative;
-      height: 210px;
-      border-radius: var(--hero-radius);
-      overflow: hidden;
-      margin-bottom: 12px;
+    }
+    /* 背景层：铺满整页并放大一点，避免模糊后边缘发虚露白 */
+    .page-bg {
+      position: absolute;
+      inset: 0;
       background-image: url('{{_res_path}}/common/bg-rank.jpg');
       background-size: cover;
-      background-position: center 15%;
+      background-position: center top;
       background-repeat: no-repeat;
+      filter: blur(var(--bg-blur)) saturate(1.05);
+      transform: scale(1.06);
+      transform-origin: center top;
     }
-    .page-hero::after {
+    /* 薄白纱：把插画压淡到正文可读，同时保留插画本身 */
+    .page-bg::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: var(--hero-scrim);
+      background: var(--page-veil);
     }
-    /* 标题贴在横幅底部（深色渐变一侧），白字清晰 */
-    .hero-body {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 1;
-      padding: 0 20px 14px;
-    }
-    .hero-body .title {
-      font-size: 30px;
-      font-weight: 800;
-      color: var(--hero-text);
-      line-height: 1.25;
-      letter-spacing: 0.5px;
-    }
-    .hero-body .subtitle {
-      margin-top: 3px;
-      font-size: 19px;
-      color: var(--hero-text-sub);
+    .page-inner {
+      position: relative;
+      padding: 14px 18px 18px;
     }
 
-    /* ===== 榜单区：白底内容容器（正文对比度以纯白为基准） ===== */
-    .page-sheet {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--hero-radius);
-      padding: 12px 14px 10px;
+    /* 页头与页脚：直接压在插画上，用淡淡的白纱底提升可读性 */
+    .header {
+      border-bottom: none;
+      margin-bottom: 6px;
+      padding-bottom: 0;
+    }
+    .page-meta {
+      margin-bottom: 8px;
     }
 
-    /* 排行榜行：阵容列固定容纳 4 个角色位 */
+    /* 榜单行：不包白卡，只用发丝分隔线 + 极淡底分组（避免把插画切成碎片） */
     .rank-row .char-list {
       flex: 0 0 320px;
     }
-    /* 伤害数值列（金色大字）加宽，避免长数字换行 */
     .rank-row .rank-main {
       flex: 0 0 230px;
     }
-    /* 行在内容容器内：去掉行自带投影，靠描边分块 */
     .rank-row {
+      background: var(--row-veil);
+      border-color: transparent;
+      border-bottom: 1px solid var(--tint-line);
+      border-radius: 8px;
       box-shadow: none;
+    }
+    .rank-row:last-child {
+      border-bottom: none;
     }
     /* 阵容缺失时的占位文字 */
     .char-missing {
@@ -75,21 +72,20 @@
     /* 榜单无数据提示的上间距 */
     .rank-empty {
       margin-top: 4px;
-    }
-  </style>
+    }  </style>
 </head>
 <body style="zoom:{{renderScale}}">
-  <!-- 顶部插画横幅 -->
-  <div class="page-hero">
-    <div class="hero-body">
-      <div class="title">{{if title}}{{title}}{{else}}DPS 数据库榜单{{/if}}</div>
-      {{if subtitle}}
-      <div class="subtitle">{{subtitle}}</div>
-      {{/if}}
-    </div>
+  <div class="page">
+    <div class="page-bg"></div>
+    <div class="page-inner">
+  <div class="header">
+    <div class="game-name">Mhydps-Plugin · DPS 数据库</div>
+    <div class="title">{{if title}}{{title}}{{else}}DPS 数据库榜单{{/if}}</div>
+    {{if subtitle}}
+    <div class="subtitle">{{subtitle}}</div>
+    {{/if}}
   </div>
 
-  <div class="page-sheet">
   <div class="page-meta">
     <span>Mhydps-Plugin · DPS 数据库</span>
     {{if total || total === 0}}<span>共 {{total}} 条</span>{{/if}}
@@ -147,17 +143,13 @@
       {{if row.lvl}}<span class="tag tag-lvl">满级</span>{{/if}}
     </div>
 
-    <!-- 视频标记 -->
-    <div class="rank-side">
-      {{if row.video}}<span class="video-mark">▶ 视频</span>{{/if}}
-    </div>
   </div>
   {{/each}}
   {{else}}
   <div class="empty-hint rank-empty">没有查询到榜单数据，请调整筛选条件或稍后重试</div>
   {{/if}}
-  </div>
-
   <div class="copyright">{{copyright}}</div>
+    </div>
+  </div>
 </body>
 </html>

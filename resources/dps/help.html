@@ -5,51 +5,51 @@
   <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/base.css"/>
   <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/components.css"/>
   <style>
-    /* 帮助页专用：顶部插画横幅（满强度）+ 白底三列指令区 */
+    /* 帮助页专用：插画整页覆盖（轻模糊 + 薄白纱）+ 三列指令网格，正文直接压在插画上 */
 
-    /* ===== 顶部横幅：插画铺满，不加白蒙版；底部深色渐变托住标题 ===== */
-    .page-hero {
+    body {
+      padding: 0;
+    }
+    .page {
       position: relative;
       width: 1156px;
-      height: 250px;
-      border-radius: var(--hero-radius);
-      overflow: hidden;
-      margin-bottom: 12px;
+    }
+    /* 背景层：铺满整页并放大一点，避免模糊后边缘发虚露白 */
+    .page-bg {
+      position: absolute;
+      inset: 0;
       background-image: url('{{_res_path}}/common/bg-help.jpg');
       background-size: cover;
-      background-position: center 26%;
+      background-position: center top;
       background-repeat: no-repeat;
+      filter: blur(var(--bg-blur)) saturate(1.05);
+      transform: scale(1.06);
+      transform-origin: center top;
     }
-    .page-hero::after {
+    .page-bg::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: var(--hero-scrim);
+      background: var(--page-veil);
     }
-    .hero-body {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 1;
-      padding: 0 22px 16px;
-    }
-    .hero-title {
-      font-size: 34px;
-      font-weight: 800;
-      color: var(--hero-text);
-      line-height: 1.25;
-      letter-spacing: 0.5px;
+    .page-inner {
+      position: relative;
+      padding: 14px 18px 18px;
     }
 
-    /* 白底区顶部的副标题与版本行 */
+    /* 页头：直接压在插画上的标题区 */
+    .header {
+      border-bottom: none;
+      margin-bottom: 6px;
+      padding-bottom: 0;
+    }
     .sheet-head {
       display: flex;
       align-items: baseline;
       justify-content: space-between;
       gap: 12px;
       padding: 0 2px 8px;
-      border-bottom: 1px solid var(--line-soft);
+      border-bottom: 1px solid var(--tint-line);
       margin-bottom: 8px;
     }
     .sheet-sub {
@@ -63,24 +63,15 @@
       white-space: nowrap;
     }
 
-    /* ===== 指令区：白底容器（正文对比度以纯白为基准） ===== */
-    .page-sheet {
-      width: 1156px;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--hero-radius);
-      padding: 12px 14px 10px;
-    }
-
-    /* 分组标题条 */
+    /* 分组标题条：半透明白，压在插画上但保留整页连续感 */
     .help-group {
       margin: 8px 0 6px;
       padding: 5px 12px;
       font-size: 21px;
       font-weight: 700;
       color: var(--text);
-      background: var(--card-2);
-      border: 1px solid var(--line);
+      background: var(--row-veil);
+      border: 1px solid var(--tint-line);
       border-left: 4px solid var(--accent);
       border-radius: 8px;
     }
@@ -95,7 +86,6 @@
       gap: 6px 20px;
       padding: 0 2px;
     }
-    /* 单条指令：命令名 + 一行说明 */
     .help-entry {
       min-width: 0;
     }
@@ -114,24 +104,21 @@
       line-height: 1.4;
       margin-bottom: 4px;
     }
-    /* 组内条目数为 1~2 时不要拉成三列 */
     .help-grid.cols-1 {
       grid-template-columns: minmax(0, 1fr);
     }
     .help-grid.cols-2 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  </style>
+    }  </style>
 </head>
 <body style="zoom:{{renderScale}}">
-  <!-- 顶部插画横幅 -->
-  <div class="page-hero">
-    <div class="hero-body">
-      <div class="hero-title">{{if helpCfg && helpCfg.title}}{{helpCfg.title}}{{else}}#DPS帮助{{/if}}</div>
-    </div>
+  <div class="page">
+    <div class="page-bg"></div>
+    <div class="page-inner">
+  <div class="header">
+    <div class="game-name">Mhydps-Plugin</div>
+    <div class="title">{{if helpCfg && helpCfg.title}}{{helpCfg.title}}{{else}}#DPS帮助{{/if}}</div>
   </div>
-
-  <div class="page-sheet">
     <div class="sheet-head">
       <span class="sheet-sub">{{if helpCfg && helpCfg.subTitle}}{{helpCfg.subTitle}}{{else}}Mhydps-Plugin 原神 DPS 数据查询{{/if}}</span>
       <span class="sheet-ver">{{if versionText}}{{versionText}}{{else}}Mhydps-Plugin{{/if}}</span>
@@ -160,5 +147,7 @@
   </div>
 
   <div class="copyright">{{copyright}}</div>
+    </div>
+  </div>
 </body>
 </html>
