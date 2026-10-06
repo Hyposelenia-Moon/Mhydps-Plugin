@@ -8,11 +8,11 @@
     /* 危战榜单页专用：行内列宽与首领信息块 */
     /* 排行榜行：阵容列固定容纳 4 个角色位 */
     .rank-row .char-list {
-      flex: 0 0 278px;
+      flex: 0 0 320px;
     }
     /* 用时秒数列（蓝色大字） */
     .rank-row .rank-main {
-      flex: 0 0 150px;
+      flex: 0 0 165px;
     }
     /* 首领 / 版本信息块：占用剩余宽度，自动换行 */
     .raid-info {
@@ -25,7 +25,7 @@
     }
     /* 首领名 */
     .raid-boss {
-      font-size: 19px;
+      font-size: 20px;
       font-weight: 600;
       color: var(--text);
       line-height: 1.35;
@@ -73,7 +73,7 @@
           {{else}}
           <div class="avatar-text">{{if c.name}}{{c.name}}{{else}}?{{/if}}</div>
           {{/if}}
-          {{if c.constellation}}<span class="avatar-con">C{{c.constellation}}</span>{{/if}}
+          {{if c.constellation}}<span class="avatar-con">{{c.constellation}}</span>{{/if}}
         </div>
         <div class="char-name">{{if c.name}}{{c.name}}{{else}}未知{{/if}}</div>
       </div>

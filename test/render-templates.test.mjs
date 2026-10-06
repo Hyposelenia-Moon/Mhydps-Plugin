@@ -115,6 +115,8 @@ if (rank.html) {
   const refs = checkRefs(rank.html, path.dirname(path.join(appRoot, 'temp', 'html', 'Mhydps-Plugin', 'dps', 'rank', 'x.html')), 'rank', /(?:href|src)="([^"]+)"/g)
   check('rank：头像走 data/avatar 相对路径', refs.some(r => r.includes('data/avatar/10000046.webp')), refs.find(r => r.includes('avatar')) || '')
   check('rank：渲染了角色名', rank.html.includes('玛薇卡') && rank.html.includes('胡桃'))
+  check('rank：命座角标为纯数字（站点式圆形角标）', /class="avatar-con">6</.test(rank.html))
+  check('rank：头像带金环样式类', rank.html.includes('avatar-img') || rank.html.includes('avatar-text'))
   check('rank：渲染了伤害与金数', rank.html.includes('323.0 万') && rank.html.includes('48'))
   check('rank：渲染了名次', rank.html.includes('rank-badge') || rank.html.includes('rank'))
   check('rank：页脚带版权行', rank.html.includes('mhydps.cn'))
@@ -228,6 +230,27 @@ for (const f of ['help.html', 'rank.html', 'raid.html', 'build.html', 'status.ht
   if (hits) templateColors.push(`${f}:${hits.join('/')}`)
 }
 check('模板内不写死颜色（全部走变量）', templateColors.length === 0, templateColors.join(' | '))
+
+// ---- 字体：原神字体随包分发（不联网下载），数字走提瓦特数字 ----
+check('声明了原神中文字体 YS（汉仪文黑）', /@font-face\s*\{[^}]*font-family:\s*'YS'/s.test(baseCss))
+check('声明了提瓦特数字字体 Number', /@font-face\s*\{[^}]*font-family:\s*'Number'/s.test(baseCss))
+check('字体栈让数字优先命中 Number', /font-family:\s*'Number',\s*'YS'/.test(baseCss), baseCss.match(/font-family:[^;]*/)?.[0] || '')
+
+const fontUrls = [...baseCss.matchAll(/url\("(\.\/font\/[^"]+)"\)/g)].map(m => m[1])
+check('base.css 引用了字体文件', fontUrls.length >= 2, fontUrls.join(','))
+const missingFonts = fontUrls.filter(u => !fs.existsSync(path.join(pluginRoot, 'resources', 'common', u.replace('./', ''))))
+check('引用的字体文件都在仓库里', missingFonts.length === 0, missingFonts.join(','))
+check('字体文件非空（>1KB）', fontUrls.every(u => {
+  const p = path.join(pluginRoot, 'resources', 'common', u.replace('./', ''))
+  return fs.existsSync(p) && fs.statSync(p).size > 1024
+}))
+
+const fontHardcode = []
+for (const f of ['help.html', 'rank.html', 'raid.html', 'build.html', 'status.html']) {
+  const text = fs.readFileSync(path.join(pluginRoot, 'resources', 'dps', f), 'utf8')
+  if (/font-family/.test(text)) fontHardcode.push(f)
+}
+check('模板不硬编码字体（统一由 base.css 决定）', fontHardcode.length === 0, fontHardcode.join(','))
 
 // ---- 渲染缩放：由配置注入模板（调用方传的值不生效，避免绕过配置） ----
 const scaled = await renderOnce('rank', { ...rankData, renderScale: 2 }, 'test-rank-scale')

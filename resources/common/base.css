@@ -5,6 +5,24 @@
  *   换主题时只改这一块，模板与组件无需改动。
  */
 
+/* ===== 字体：原神字体随插件分发（resources/common/font/），不联网下载 =====
+   YS     汉仪文黑-65W        原神标准中文（正文主字体）
+   Number tttgbnumber（提瓦特数字）含全部阿拉伯数字，故排在字体栈最前：
+          数字自动命中它，其余字符回落 YS 与系统字体
+   src 用相对本文件的路径，模板与组件无需感知资源前缀。 */
+@font-face {
+  font-family: 'YS';
+  src: url("./font/HYWH-65W.woff") format('woff');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Number';
+  src: url("./font/tttgbnumber.woff") format('woff'),
+       url("./font/tttgbnumber.ttf") format('truetype');
+  font-display: swap;
+}
+
 :root {
   /* ===== 底色：页面纯白（渲染图要求白底） ===== */
   --bg: #ffffff;
@@ -49,6 +67,14 @@
   --tint: rgba(30, 34, 48, 0.04);        /* 中性浅底 */
   --tint-line: rgba(30, 34, 48, 0.10);   /* 中性浅描边 */
 
+  /* ===== 角色头像金色圆环（对齐站点：所有头像统一描金边） ===== */
+  --avatar-ring: rgba(200, 149, 0, 0.75);
+  --avatar-ring-soft: rgba(200, 149, 0, 0.30);
+
+  /* ===== 帮助页页头遮罩（背景图上压一层由浓到淡的白色，保证文字可读） ===== */
+  --hero-veil-from: rgba(255, 255, 255, 0.94);
+  --hero-veil-to: rgba(255, 255, 255, 0.55);
+
   /* ===== 名次徽标（4 名及以后） ===== */
   --rank-bg: #f1f3f8;
   --rank-line: #dfe3ec;
@@ -82,9 +108,9 @@
   box-sizing: border-box;
 }
 
-/* ===== 页面基础：白底、宽度随内容自适应 ===== */
+/* ===== 页面基础：白底、宽度随内容自适应；字体为原神字体栈 ===== */
 body {
-  font-family: 'MiSans', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  font-family: 'Number', 'YS', '汉仪文黑-65W', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
   font-size: 20px;
   line-height: 1.55;
   color: var(--text);
@@ -109,16 +135,4 @@ img {
 /* ===== 等宽数字 .num：榜单/面板数值对齐更整齐 ===== */
 .num {
   font-variant-numeric: tabular-nums;
-}
-
-/* ===== 行内代码 .code：命令与参数示例（帮助页、状态页共用） ===== */
-.code {
-  font-family: 'Cascadia Mono', 'Consolas', 'Courier New', monospace;
-  font-size: 0.92em;
-  padding: 1px 7px;
-  border-radius: 6px;
-  background: var(--tint);
-  border: 1px solid var(--tint-line);
-  color: var(--text);
-  white-space: nowrap;
 }

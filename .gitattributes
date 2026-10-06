@@ -1,3 +1,12 @@
 * text=auto eol=lf
+
+# 二进制资源：禁止行尾转换（字体被当文本处理会损坏）
 *.webp binary
 *.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
