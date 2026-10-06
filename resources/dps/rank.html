@@ -5,7 +5,56 @@
   <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/base.css"/>
   <link rel="stylesheet" type="text/css" href="{{_res_path}}/common/components.css"/>
   <style>
-    /* 榜单页专用：行内列宽微调 */
+    /* 榜单页专用：顶部插画横幅（满强度）+ 下方白底榜单区 */
+
+    /* ===== 顶部横幅：插画铺满，不加任何白蒙版；底部压一层深色渐变托住标题文字 ===== */
+    .page-hero {
+      position: relative;
+      height: 210px;
+      border-radius: var(--hero-radius);
+      overflow: hidden;
+      margin-bottom: 12px;
+      background-image: url('{{_res_path}}/common/bg-rank.jpg');
+      background-size: cover;
+      background-position: center 15%;
+      background-repeat: no-repeat;
+    }
+    .page-hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--hero-scrim);
+    }
+    /* 标题贴在横幅底部（深色渐变一侧），白字清晰 */
+    .hero-body {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+      padding: 0 20px 14px;
+    }
+    .hero-body .title {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--hero-text);
+      line-height: 1.25;
+      letter-spacing: 0.5px;
+    }
+    .hero-body .subtitle {
+      margin-top: 3px;
+      font-size: 19px;
+      color: var(--hero-text-sub);
+    }
+
+    /* ===== 榜单区：白底内容容器（正文对比度以纯白为基准） ===== */
+    .page-sheet {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--hero-radius);
+      padding: 12px 14px 10px;
+    }
+
     /* 排行榜行：阵容列固定容纳 4 个角色位 */
     .rank-row .char-list {
       flex: 0 0 320px;
@@ -13,6 +62,10 @@
     /* 伤害数值列（金色大字）加宽，避免长数字换行 */
     .rank-row .rank-main {
       flex: 0 0 230px;
+    }
+    /* 行在内容容器内：去掉行自带投影，靠描边分块 */
+    .rank-row {
+      box-shadow: none;
     }
     /* 阵容缺失时的占位文字 */
     .char-missing {
@@ -26,21 +79,24 @@
   </style>
 </head>
 <body style="zoom:{{renderScale}}">
-  <div class="header">
-    <div class="game-name">Mhydps-Plugin · DPS 数据库</div>
-    <div class="title">{{if title}}{{title}}{{else}}DPS 数据库榜单{{/if}}</div>
-    {{if subtitle}}
-    <div class="subtitle">{{subtitle}}</div>
-    {{/if}}
+  <!-- 顶部插画横幅 -->
+  <div class="page-hero">
+    <div class="hero-body">
+      <div class="title">{{if title}}{{title}}{{else}}DPS 数据库榜单{{/if}}</div>
+      {{if subtitle}}
+      <div class="subtitle">{{subtitle}}</div>
+      {{/if}}
+    </div>
   </div>
 
+  <div class="page-sheet">
   <div class="page-meta">
+    <span>Mhydps-Plugin · DPS 数据库</span>
     {{if total || total === 0}}<span>共 {{total}} 条</span>{{/if}}
     {{if totalPages && totalPages > 1}}<span>第 {{page}} / {{totalPages}} 页</span>{{/if}}
     {{if pageSize}}<span>每页 {{pageSize}} 条</span>{{/if}}
     {{if fetchedAt}}<span>数据时间：{{fetchedAt}}</span>{{/if}}
   </div>
-
   {{if rows && rows.length > 0}}
   {{each rows row}}
   <div class="rank-row">
@@ -61,7 +117,6 @@
           {{if c.constellation}}<span class="avatar-con">{{c.constellation}}</span>{{/if}}
         </div>
         <div class="char-name">{{if c.name}}{{c.name}}{{else}}未知{{/if}}</div>
-        {{if c.elementCn}}<div class="char-elem elem-{{c.elementCn}}">{{c.elementCn}}</div>{{/if}}
       </div>
       {{/each}}
     </div>
@@ -101,6 +156,7 @@
   {{else}}
   <div class="empty-hint rank-empty">没有查询到榜单数据，请调整筛选条件或稍后重试</div>
   {{/if}}
+  </div>
 
   <div class="copyright">{{copyright}}</div>
 </body>

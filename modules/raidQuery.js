@@ -152,3 +152,57 @@ export async function queryRaid (q = {}, opts = {}) {
     scope: { teams2: teams2.length }
   }
 }
+
+/**
+ * 按名次取单条危战记录（视频查询用）
+ *
+ * 名次与榜单图编号同口径：当前筛选与排序下从 1 起的全局序号（跨页连续）。
+ * @param {object} q - 同 queryRaid 的查询参数
+ * @param {number|string} rankNo - 名次（1 起）
+ * @param {object} [opts] - { proxy, timeoutMs, sort }
+ * @returns {Promise<object>}
+ */
+export async function findRaidEntry (q = {}, rankNo, opts = {}) {
+  const rank = Number(rankNo)
+  if (!Number.isFinite(rank) || rank < 1 || !Number.isInteger(rank)) {
+    return { ok: false, error: '名次需要是正整数，例如 #DPS危战榜视频 3' }
+  }
+
+  const character = q.char ? findCharacter(q.char) : null
+  if (q.char && !character) {
+    return {
+      ok: false,
+      error: `没有找到角色「${q.char}」`,
+      suggestions: searchCharacters(q.char, 6).map(c => c.name)
+    }
+  }
+
+  const bossRecord = q.boss ? findBoss(q.boss) : null
+  if (q.boss && !bossRecord) {
+    return { ok: false, error: `没有找到首领「${q.boss}」`, suggestions: [] }
+  }
+  if (q.ver && !versions().includes(q.ver)) {
+    return { ok: false, error: `没有版本「${q.ver}」的危战记录`, suggestions: versions().slice(0, 6) }
+  }
+
+  const fresh = await ensureFresh(opts)
+  const { teams2 } = getSnapshot()
+  const sort = opts.sort || q.sort || 'costAsc'
+  const sorted = sortRaids(filterRaids(teams2, { ...q, character, bossRecord }), sort)
+
+  const total = sorted.length
+  if (!total) return { ok: false, error: '当前筛选条件下没有任何记录' }
+  if (rank > total) return { ok: false, error: `名次超出范围：当前条件下共 ${total} 条` }
+
+  const info = cacheInfo()
+  return {
+    ok: true,
+    row: buildRows([sorted[rank - 1]], rank)[0],
+    total,
+    rank,
+    subtitle: describe({ ...q, sort }, { character, bossRecord }),
+    stale: info.stale,
+    fetchedAt: info.fetchedAt,
+    refreshed: fresh.refreshed
+  }
+}

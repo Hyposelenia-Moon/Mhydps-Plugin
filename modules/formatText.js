@@ -25,11 +25,44 @@ function charLine (chars) {
  * @param {object} row
  * @returns {string} 形如「　[满级 宏]」，无徽章时返回空串
  */
-function badgeLine (row) {
+function badgeList (row) {
   const badges = [...(row.tags || [])]
   if (row.clean) badges.push('绿玩')
   if (row.lvl) badges.push('满级')
+  return badges
+}
+
+/** 徽章文本（含方括号，供榜单文本用） */
+function badgeLine (row) {
+  const badges = badgeList(row)
   return badges.length ? `　[${badges.join(' ')}]` : ''
+}
+
+/**
+ * 单条记录文本（视频查询用）：名次 + 主数值 + 金数 + 阵容 + 标签 + 视频链接
+ * @param {object} result - findRankEntry / findRaidEntry 的返回值
+ * @param {'rank'|'raid'} kind
+ * @returns {string}
+ */
+export function entryText (result, kind = 'rank') {
+  const row = result.row
+  const title = kind === 'raid' ? '#DPS危战榜' : '#DPS榜'
+  const lines = [`${title} 第 ${result.rank} 名（当前条件下共 ${result.total} 条）`]
+
+  if (kind === 'raid') {
+    lines.push(`${row.speedText}　${row.cost}金（限${row.limitcost}/常${row.normalcost}）　${row.ver}｜${row.bossName}`)
+  } else {
+    lines.push(`${row.damageText}　${row.cost}金（限${row.limitcost}/常${row.normalcost}）`)
+  }
+
+  lines.push(`阵容：${charLine(row.chars)}`)
+
+  const badges = badgeList(row)
+  if (badges.length) lines.push(`标签：${badges.join(' ')}`)
+
+  lines.push(row.video ? `视频：${row.video}` : '视频：这条记录没有留下视频链接')
+  lines.push('', `数据：${SITE_NAME} · 抓取于 ${formatTime(result.fetchedAt)}`)
+  return lines.join('\n')
 }
 
 /**

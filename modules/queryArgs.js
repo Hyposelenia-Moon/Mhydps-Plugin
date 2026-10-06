@@ -156,3 +156,24 @@ export function parseRaidArgs (text) {
 }
 
 export { parseCommon }
+
+/**
+ * 从参数里摘出名次（第一个纯数字 token），其余原样留给 parseRankArgs / parseRaidArgs
+ *
+ * 用在视频查询（`#DPS榜视频 3 胡桃`）：名次与榜单图编号同口径，
+ * 其余筛选词与榜单命令完全一致，故这里只负责把数字拆出来。
+ * @param {string} text
+ * @returns {{ rankNo: number, rest: string }}
+ */
+export function takeRankNo (text) {
+  let rankNo = 0
+  const rest = []
+  for (const token of String(text || '').split(/[\s,，]+/).filter(Boolean)) {
+    if (!rankNo && /^\d+$/.test(token)) {
+      rankNo = Number(token)
+      continue
+    }
+    rest.push(token)
+  }
+  return { rankNo, rest: rest.join(' ') }
+}

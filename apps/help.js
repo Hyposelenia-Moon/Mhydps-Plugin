@@ -1,5 +1,3 @@
-import fs from 'node:fs'
-import path from 'node:path'
 import plugin from '../../../lib/plugins/plugin.js'
 import { getPluginConfig } from '../components/config.js'
 import { COPYRIGHT } from '../components/constants.js'
@@ -15,21 +13,6 @@ const heroVersion = versionText || `Mhydps-Plugin ${pluginVersion}`
 const CMD_RE = /^#?(?:dps|DPS)帮助$/
 
 const TITLE = '#DPS帮助'
-
-/** 帮助页可选背景图（放在 resources/common/ 下，按此顺序取第一张存在的） */
-const HERO_BG_CANDIDATES = ['help-bg.webp', 'help-bg.png', 'help-bg.jpg', 'help-bg.jpeg']
-
-/**
- * 找可用的帮助页背景图
- *
- * 有图就用图（铺在页头，叠一层白色遮罩保证文字可读），没图回落浅色渐变。
- * 由使用者自行放入图片文件，仓库不携带任何美术资源。
- * @returns {string} 文件名（供模板拼 {{_res_path}}/common/<name>），无图返回空串
- */
-function findHeroBg () {
-  const dir = path.join(process.cwd(), 'plugins', 'Mhydps-Plugin', 'resources', 'common')
-  return HERO_BG_CANDIDATES.find(name => fs.existsSync(path.join(dir, name))) || ''
-}
 
 export class MhydpsHelp extends plugin {
   constructor () {
@@ -68,7 +51,6 @@ export class MhydpsHelp extends plugin {
       const data = {
         helpCfg,
         helpGroup,
-        helpBg: findHeroBg(),
         versionText: heroVersion,
         copyright: COPYRIGHT
       }

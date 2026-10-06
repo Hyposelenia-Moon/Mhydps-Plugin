@@ -42,28 +42,28 @@
   /* ===== 文字 ===== */
   --text: #1e2230;            /* 主文字 / 数值 */
   --text-2: #4c5265;          /* 次级文字（角色名、首领名） */
-  --muted: #828899;           /* 弱化文字（说明、标签名） */
-  --muted-2: #9aa0b0;         /* 更弱（占位、页脚） */
+  --muted: #525965;           /* 弱化文字（说明、标签名）；已按 WCAG AA 校准 */
+  --muted-2: #555c68;         /* 更弱（占位、页脚）；已按 WCAG AA 校准 */
 
   /* ===== 强调色（白底上整体压暗一档以保住对比度） ===== */
-  --accent: #2a7ad6;          /* 蓝：插件名、卡片标题竖线、页码数值 */
-  --accent-2: #7c4dcc;        /* 紫：版本标签、附注 */
-  --gold: #a97600;            /* 金：伤害数值等金色文字 */
+  --accent: #144f96;          /* 蓝：插件名、卡片标题竖线、页码数值 */
+  --accent-2: #6139a8;        /* 紫：版本标签、附注 */
+  --gold: #6f4c00;            /* 金：伤害数值等金色文字 */
   --gold-2: #c89500;          /* 金强调：命座角标描边 */
-  --green: #12855a;           /* 绿：绿玩 */
-  --red: #c0453f;             /* 红：视频标记、错误 */
+  --green: #0b6445;           /* 绿：绿玩 */
+  --red: #99332e;             /* 红：视频标记、错误 */
 
   /* ===== 低透明底与描边（胶囊标签、属性格） ===== */
-  --accent-soft: rgba(42, 122, 214, 0.10);
-  --accent-line: rgba(42, 122, 214, 0.32);
-  --purple-soft: rgba(124, 77, 204, 0.10);
-  --purple-line: rgba(124, 77, 204, 0.30);
-  --gold-soft: rgba(169, 118, 0, 0.10);
-  --gold-line: rgba(169, 118, 0, 0.32);
-  --green-soft: rgba(18, 133, 90, 0.10);
-  --green-line: rgba(18, 133, 90, 0.30);
-  --red-soft: rgba(192, 69, 63, 0.09);
-  --red-line: rgba(192, 69, 63, 0.30);
+  --accent-soft: rgba(20, 79, 150, 0.10);
+  --accent-line: rgba(20, 79, 150, 0.32);
+  --purple-soft: rgba(97, 57, 168, 0.10);
+  --purple-line: rgba(97, 57, 168, 0.30);
+  --gold-soft: rgba(111, 76, 0, 0.10);
+  --gold-line: rgba(111, 76, 0, 0.32);
+  --green-soft: rgba(11, 100, 69, 0.10);
+  --green-line: rgba(11, 100, 69, 0.30);
+  --red-soft: rgba(153, 51, 46, 0.09);
+  --red-line: rgba(153, 51, 46, 0.30);
   --tint: rgba(30, 34, 48, 0.04);        /* 中性浅底 */
   --tint-line: rgba(30, 34, 48, 0.10);   /* 中性浅描边 */
 
@@ -71,9 +71,15 @@
   --avatar-ring: rgba(200, 149, 0, 0.75);
   --avatar-ring-soft: rgba(200, 149, 0, 0.30);
 
-  /* ===== 帮助页页头遮罩（背景图上压一层由浓到淡的白色，保证文字可读） ===== */
-  --hero-veil-from: rgba(255, 255, 255, 0.94);
-  --hero-veil-to: rgba(255, 255, 255, 0.55);
+  /* ===== 页头横幅（插画满强度显示区） =====
+     结构上把插画与正文分开放：插画只在顶部横幅里、不加任何白蒙版（原图强度显示），
+     正文全部落在下方白底内容区，因此正文对比度以纯白为基准，不再与插画互相妥协。 */
+  /* 只在标题一侧压深（上段全部留给插画）：34% 起渐变，62% 到 0.65、80% 到 0.86；
+     近白插画上小号白字需 ≥0.79，故横幅内不放小字（小字进白底元信息行） */
+  --hero-scrim: linear-gradient(180deg, rgba(8, 12, 24, 0) 34%, rgba(8, 12, 24, 0.65) 62%, rgba(8, 12, 24, 0.86) 80%, rgba(8, 12, 24, 0.90) 100%);
+  --hero-text: #ffffff;
+  --hero-text-sub: rgba(255, 255, 255, 0.86);
+  --hero-radius: 12px;
 
   /* ===== 名次徽标（4 名及以后） ===== */
   --rank-bg: #f1f3f8;
@@ -84,21 +90,21 @@
   --rank-1-from: #ffdf7a;
   --rank-1-to: #f0b400;
   --rank-1-text: #4a3400;
-  --rank-2-from: #c39bff;
+  --rank-2-from: #9c6ff0;
   --rank-2-to: #8b5cf6;
   --rank-2-text: #ffffff;
-  --rank-3-from: #7db8f2;
-  --rank-3-to: #2a7ad6;
+  --rank-3-from: #3579cd;
+  --rank-3-to: #144f96;
   --rank-3-text: #ffffff;
 
   /* ===== 七元素配色（白底可读） ===== */
-  --elem-pyro: #d0452a;
-  --elem-hydro: #1f7fc4;
-  --elem-anemo: #15907a;
-  --elem-electro: #7a4ddb;
-  --elem-dendro: #5c9421;
-  --elem-cryo: #188ba8;
-  --elem-geo: #a97600;
+  --elem-pyro: #ab2f18;
+  --elem-hydro: #14588c;
+  --elem-anemo: #0c5e50;
+  --elem-electro: #5933a8;
+  --elem-dendro: #406a13;
+  --elem-cryo: #0e6076;
+  --elem-geo: #785908;
 }
 
 /* ===== 全局重置：清掉默认内外边距，统一盒模型 ===== */

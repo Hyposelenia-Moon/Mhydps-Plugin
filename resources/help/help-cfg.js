@@ -24,7 +24,8 @@ export const helpList = [
       { title: '#DPS榜 金≤12', desc: '按总金数筛选：12金 / 金12 / 金≥8 / 8-12金' },
       { title: '#DPS榜 绿玩', desc: '只看无宏、无连点的记录' },
       { title: '#DPS榜 标签:宏', desc: '按站点标签筛，可为赛事名（如 总伤杯S3）' },
-      { title: '#DPS榜 -p2', desc: '翻页：-p2 / 第2页 / 页:2' }
+      { title: '#DPS榜 -p2', desc: '翻页：-p2 / 第2页 / 页:2' },
+      { title: '#DPS榜视频 3', desc: '发第 3 名的 B 站视频链接（可带上面的筛选）' }
     ]
   },
   {
@@ -34,7 +35,8 @@ export const helpList = [
       { title: '#DPS危战榜 7.1', desc: '按版本筛选（5.7 ~ 当前）' },
       { title: '#DPS危战榜 <首领>', desc: '按首领筛，可只写简称（如 矮灵雕刻师）' },
       { title: '#DPS危战榜 <角色>', desc: '只看含该角色的记录' },
-      { title: '#DPS危战榜 金≤4', desc: '低金成绩常用写法' }
+      { title: '#DPS危战榜 金≤4', desc: '低金成绩常用写法' },
+      { title: '#DPS危战榜视频 3', desc: '发第 3 名的 B 站视频链接' }
     ]
   },
   {

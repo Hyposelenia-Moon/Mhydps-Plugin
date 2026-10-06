@@ -88,12 +88,13 @@ config/config.yaml.example  ← 参考默认值（入库，首次启动自动复
 ### 渲染
 
 - 模板在 `resources/dps/*.html`，art-template 语法；`{{_res_path}}` / `{{_data_path}}` / `{{renderScale}}` / `{{copyright}}` 由 `components/render.js` 注入。
-- 模板内不写 `<script>`，不引用外部字体（仓库不携带字体文件）。
+- 模板内不写 `<script>`；字体随包分发（见下一条），不引用站外字体。
 - **配色只写在 `resources/common/base.css` 的 `:root` 变量块**（当前为白底浅色一套）：`components.css` 与 5 个模板一律 `var(--x)`，不得写死色值；这条由 `render-templates` 套件守门（残留深色主题色或模板里出现 hex/rgba 都会红）。
 - **字体也只写在 `base.css`**：`@font-face` 声明原神字体（`resources/common/font/HYWH-65W.woff` 中文 + `tttgbnumber` 数字，随包分发、不联网下载），字体栈把数字字体排在最前；模板不得出现 `font-family`（套件会检查）。换字体 = 换文件 + 改这段声明。
 - 榜单行版式对齐站点：名次徽章 → 4 个描金圆环头像（右上角圆形命座数字，仅数字不带 C）→ 大号伤害数字 → 金数 → 标签/视频标记。
-- 帮助图内容来自 `resources/help/help-cfg.js`，版式是「页头 + 分组标题条 + 三列指令网格」，每项只有 `title` / `desc` 两个字段——**不要加回语法块 / 参数表 / 示例块**（`help-config` 套件会因条目出现多余字段而报红）。参数写法请直接落成可照抄的命令条目（如 `#DPS榜 金≤12`）。
-- 帮助页页头支持可选背景图：把图片放到 `resources/common/help-bg.{webp,png,jpg,jpeg}` 即自动铺图（叠白色遮罩保证文字可读），没图时用浅色渐变兜底；**仓库不携带任何美术资源**。
+- 帮助图内容来自 `resources/help/help-cfg.js`，版式是「顶部插画横幅 + 白底容器（副标题行 / 分组标题条 / 三列指令网格）」，每项只有 `title` / `desc` 两个字段——**不要加回语法块 / 参数表 / 示例块**（`help-config` 套件会因条目出现多余字段而报红）。参数写法请直接落成可照抄的命令条目（如 `#DPS榜 金≤12`）。
+- 两页的插画都只在顶部横幅里（`resources/common/bg-rank.jpg` / `bg-help.jpg`）：横幅内原图满强度、只放白色大标题（底部 `--hero-scrim` 渐变托字）；小字一律进白底容器。**不要把插画铺到正文后面**——要么被白卡切成碎片，要么为了迁就正文对比度把插画洗淡。改背景图或取景见 `tool/background/README.md`。
+- **改文字色或调蒙版后必须跑 `test/contrast.test.mjs`**（离线按令牌现算 WCAG：正文 ≥4.5:1、大字 ≥3:1、最小字号 ≥14px）；换了背景图还要跑 `tool/background/hero-contrast.ps1` 复核横幅文字。
 - `components/render.js` 的 `RES_PREFIX` 层级依赖框架把 HTML 写到 `temp/html/<插件名>/<APP>/<tpl>/`，改动模板命名前先读该文件注释。
 
 ### 日志与注释

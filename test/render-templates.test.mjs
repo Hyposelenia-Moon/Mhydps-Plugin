@@ -77,18 +77,20 @@ async function renderOnce (tpl, data, saveId) {
   }
 }
 
-/** 核对 HTML 里的相对引用是否都能落到真实文件 */
+/** 核对 HTML 里的相对引用是否都能落到真实文件（href/src 与 CSS 里的 url(...)，含背景图） */
 function checkRefs (html, htmlDir, label, refRe) {
   const refs = [...html.matchAll(refRe)].map(m => m[1])
+  const urls = [...html.matchAll(/url\(['"]?([^'")]+)['"]?\)/g)].map(m => m[1])
+  const all = [...new Set([...refs, ...urls])]
   check(`${label}：模板内无残留未替换占位符`, !/\{\{|\}\}/.test(html))
-  check(`${label}：引用了资源文件`, refs.length > 0, `${refs.length} 处`)
-  const broken = refs.filter(ref => {
-    if (/^(https?:|data:)/.test(ref)) return false
+  check(`${label}：引用了资源文件`, all.length > 0, `${all.length} 处`)
+  const broken = all.filter(ref => {
+    if (/^(https?:|data:|#)/.test(ref)) return false
     const abs = path.resolve(htmlDir, ref.split('?')[0])
     return !fs.existsSync(abs)
   })
   check(`${label}：所有相对引用都能解析到文件`, broken.length === 0, broken.slice(0, 3).join(' | '))
-  return refs
+  return all
 }
 
 const teams = normalizeTeams(loadFixture('teams.sample.json'))
@@ -120,6 +122,9 @@ if (rank.html) {
   check('rank：渲染了伤害与金数', rank.html.includes('323.0 万') && rank.html.includes('48'))
   check('rank：渲染了名次', rank.html.includes('rank-badge') || rank.html.includes('rank'))
   check('rank：页脚带版权行', rank.html.includes('mhydps.cn'))
+  check('rank：顶部插画横幅已铺上', rank.html.includes('bg-rank.jpg') && rank.html.includes('page-hero'))
+  check('rank：标题在横幅、元信息在白底区', rank.html.includes('hero-body') && rank.html.includes('page-meta'))
+  check('rank：横幅文字用白色令牌', rank.html.includes('var(--hero-text)') && rank.html.includes('var(--hero-scrim)'))
 }
 
 // ---- raid ----
@@ -205,7 +210,9 @@ if (help.html) {
   check('help：条目含命令与说明', help.html.includes('entry-cmd') && help.html.includes('entry-desc'))
   check('help：说明文案来自配置', help.html.includes('只看无宏、无连点的记录'))
   check('help：页头有版本行', help.html.includes('hero-plugin') && help.html.includes('Mhydps-Plugin 1.0.0'))
-  check('help：无背景图时回落渐变', help.html.includes('help-hero') && !help.html.includes('has-bg'))
+  check('help：顶部插画横幅已铺上', help.html.includes('bg-help.jpg') && help.html.includes('page-hero'))
+  check('help：标题在横幅内、小字在白底区', help.html.includes('hero-title') && help.html.includes('sheet-head'))
+  check('help：横幅文字用白色令牌', help.html.includes('var(--hero-text)') && help.html.includes('var(--hero-scrim)'))
   check('help：不再渲染参数表/快速上手/示例块', !help.html.includes('help-args') && !help.html.includes('快速上手') && !help.html.includes('help-example'))
   // 尖括号 placeholder 会被 art-template 转义（实体形式随版本而异，两种都认）
   check('help：示例中的尖括号被转义而非当标签', /(&#60;|&lt;)UID(&#62;|&gt;)/.test(help.html))

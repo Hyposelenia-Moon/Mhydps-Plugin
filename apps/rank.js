@@ -9,7 +9,7 @@ import { respond, suggestLine } from '../modules/respond.js'
 const config = getPluginConfig()
 
 /** `#DPS榜` / `#DPS排行` / `#DPS排名` */
-const CMD_RE = /^#?(?:dps|DPS)(?:榜|排行榜|排行|排名)\s*([\s\S]*)$/
+const CMD_RE = /^#?(?:dps|DPS)(?:榜|排行榜|排行|排名)(?!视频)\s*([\s\S]*)$/
 
 /** 文本回退与图标题 */
 const TITLE = '#DPS榜'

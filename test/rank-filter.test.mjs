@@ -80,7 +80,7 @@ check('名次从 startRank 连续编号', rows.map(r => r.rank).join(',') === '4
 check('伤害文本已格式化', rows[0].damageText.includes('万'), rows[0].damageText)
 check('成员视图含命座文本', rows[0].chars[0].cText === 'C6')
 check('命座 0 不输出角标', buildRows([teams.find(t => t.id === 't-002')])[0].chars[0].cText === '')
-check('成员视图带元素中文', rows[0].chars[0].elementCn === '火')
+check('成员视图不再带元素（榜单不显示元素标签）', rows[0].chars[0].elementCn === undefined)
 check('标签视图只含站点标签（绿玩/满级由模板按字段渲染）', buildRows([teams.find(t => t.id === 't-002')])[0].tags.length === 0)
 check('未审核记录带标记', buildRows([teams.find(t => t.id === 't-005')])[0].tags.includes('未审核'))
 check('站点标签原样保留', buildRows([teams.find(t => t.id === 't-003')])[0].tags.includes('总伤杯S3.N'))

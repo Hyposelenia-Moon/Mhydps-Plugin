@@ -4,13 +4,13 @@
  * DPS 榜与危战榜共用的展示口径：成员头像/命座、金数三元组（总/限定/常驻）。
  * 头像只在本地已缓存时才给路径（模板据此决定渲染图片还是文字占位，避免裂图）。
  */
-import { findCharacter, elementCn } from '../model/CharacterIndex.js'
+import { findCharacter } from '../model/CharacterIndex.js'
 import { hasAvatar } from '../model/AvatarStore.js'
 
 /**
  * 成员列表 → 视图数组
  * @param {Array<{charId: string, constellation: number}>} members
- * @returns {Array<{name: string, constellation: number, cText: string, avatar: string, rarity: number, elementCn: string}>}
+ * @returns {Array<{name: string, constellation: number, cText: string, avatar: string, rarity: number}>}
  */
 export function memberViews (members) {
   return (members || []).map(m => {
@@ -22,8 +22,7 @@ export function memberViews (members) {
       constellation,
       cText: constellation > 0 ? `C${constellation}` : '',
       avatar: id && hasAvatar(id) ? id : '',
-      rarity: record?.rarity || 4,
-      elementCn: elementCn(record?.element)
+      rarity: record?.rarity || 4
     }
   })
 }

@@ -149,3 +149,51 @@ export async function queryRank (q = {}, opts = {}) {
     scope: { teams: teams.length }
   }
 }
+
+/**
+ * 按名次取单条记录（视频查询用）
+ *
+ * 名次与榜单图里的编号同口径：在**当前筛选与排序**下从 1 开始的全局序号（跨页连续）。
+ * @param {object} q - 同 queryRank 的查询参数
+ * @param {number|string} rankNo - 名次（1 起）
+ * @param {object} [opts] - { proxy, timeoutMs, sort }
+ * @returns {Promise<object>} 成功 { ok: true, row, total, rank, ... }；越界/角色没找到 { ok: false, error }
+ */
+export async function findRankEntry (q = {}, rankNo, opts = {}) {
+  const rank = Number(rankNo)
+  if (!Number.isFinite(rank) || rank < 1 || !Number.isInteger(rank)) {
+    return { ok: false, error: '名次需要是正整数，例如 #DPS榜视频 3' }
+  }
+
+  const character = q.char ? findCharacter(q.char) : null
+  if (q.char && !character) {
+    return {
+      ok: false,
+      error: `没有找到角色「${q.char}」`,
+      suggestions: searchCharacters(q.char, 6).map(c => c.name)
+    }
+  }
+
+  const fresh = await ensureFresh(opts)
+  const { teams } = getSnapshot()
+  const sorted = sortTeams(
+    filterTeams(teams, { ...q, character }),
+    opts.sort || q.sort || 'damage'
+  )
+
+  const total = sorted.length
+  if (!total) return { ok: false, error: '当前筛选条件下没有任何记录' }
+  if (rank > total) return { ok: false, error: `名次超出范围：当前条件下共 ${total} 条` }
+
+  const info = cacheInfo()
+  return {
+    ok: true,
+    row: buildRows([sorted[rank - 1]], rank)[0],
+    total,
+    rank,
+    subtitle: describe({ ...q, sort: opts.sort || q.sort || 'damage' }, character),
+    stale: info.stale,
+    fetchedAt: info.fetchedAt,
+    refreshed: fresh.refreshed
+  }
+}
