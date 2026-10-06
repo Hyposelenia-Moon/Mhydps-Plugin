@@ -26,7 +26,8 @@ const {
   panelStatText,
   weaponStatLabel,
   weaponStatText,
-  pickAvatarsByNames
+  pickAvatarsByNames,
+  queryBuild
 } = await import(mod('modules/buildQuery.js'))
 const { readPlayer } = await import(mod('model/EnkaClient.js'))
 
@@ -125,5 +126,30 @@ check('不筛选时原样返回全部', picked.picked.length === sample.avatarIn
 
 picked = pickAvatarsByNames(sample.avatarInfoList, ['胡桃', '瞎写'])
 check('命中与未命中混用：只筛命中的，未命中单独回传', picked.picked.length === 1 && picked.unknown.join(',') === '瞎写')
+
+// ---- queryBuild 整条路（注入离线样例，不联网、不下载立绘） ----
+// 这一步专门防「组装函数里用了没 import 的符号」这类只在真机才炸的错误
+const offline = (names) => queryBuild('100000000', {
+  fetch: async () => sample,
+  downloadAvatars: false,
+  names
+})
+
+const all = await offline([])
+check('queryBuild：全部角色按等级降序', all.chars.length === 2 && all.chars[0].name === '胡桃', all.chars.map(c => c.name).join(','))
+check('queryBuild：带共用素材字段（未装 miao 时为空串）', all.assets && ['cardBg', 'star', 'icons'].every(k => typeof all.assets[k] === 'string'), JSON.stringify(all.assets))
+check('queryBuild：不筛选时 filtered=false 且名单齐全', all.filtered === false && all.roster.length === 2, all.roster.join(','))
+check('queryBuild：每个角色都有 panel 素材结构', all.chars.every(c => c.panel && c.panel.cons.length === 6))
+
+const only = await offline(['胡桃'])
+check('queryBuild：按角色筛选只留命中项', only.filtered === true && only.chars.length === 1 && only.chars[0].name === '胡桃')
+check('queryBuild：筛掉的角色不计入 total', only.total === 2 && only.matched === 1, `total=${only.total} matched=${only.matched}`)
+
+const miss = await offline(['不存在的角色'])
+check('queryBuild：关键词都不是角色名时不当筛选（照常出全部 + 回传未识别）', miss.filtered === false && miss.chars.length === 2 && miss.unknown.includes('不存在的角色'))
+
+const none = await offline(['夜兰'])
+check('queryBuild：命中角色名但该号没有该角色 = 筛选落空', none.filtered === true && none.chars.length === 0 && none.matched === 0)
+check('queryBuild：落空时 roster 仍给出该号公开角色', none.roster.join(',') === '胡桃,琴', none.roster.join(','))
 
 finish()

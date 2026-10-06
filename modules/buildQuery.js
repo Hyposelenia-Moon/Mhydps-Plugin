@@ -16,7 +16,7 @@
 import { fetchPlayer, readPlayer } from '../model/EnkaClient.js'
 import { characterById, elementCn, findCharacter } from '../model/CharacterIndex.js'
 import { ensureAvatars, hasAvatar } from '../model/AvatarStore.js'
-import { preparePanelAssets, weaponDetail } from '../model/PanelAssets.js'
+import { preparePanelAssets, prepareSharedAssets, weaponDetail } from '../model/PanelAssets.js'
 import { getPluginConfig } from '../components/config.js'
 import {
   ENKA_PROP_CN,
@@ -243,18 +243,21 @@ export function pickAvatarsByNames (raw, names = []) {
 /**
  * 查询练度
  * @param {string} uid - 9 位 UID
- * @param {object} [opts] - { proxy, timeoutMs, downloadAvatars, names }
+ * @param {object} [opts] - { proxy, timeoutMs, downloadAvatars, names, fetch }
  * @param {string[]} [opts.names] - 只看这些角色（名字或别名；空数组 = 全部）
+ * @param {Function} [opts.fetch] - 取数实现，默认 EnkaClient.fetchPlayer（回归套件注入离线样例）
  * @returns {Promise<object>}
  * @throws {Error} UID 非法 / Enka 侧错误（由 apps 层捕获后回复文本）
  */
 export async function queryBuild (uid, opts = {}) {
-  const data = await fetchPlayer(uid, opts)
+  // `opts.fetch` 只给回归套件用：注入离线样例就能把「取数 → 筛选 → 组装」整条路跑通
+  const fetcher = typeof opts.fetch === 'function' ? opts.fetch : fetchPlayer
+  const data = await fetcher(uid, opts)
   const player = readPlayer(data)
   const raw = Array.isArray(data?.avatarInfoList) ? data.avatarInfoList : []
 
   const keywords = (opts.names || []).map(n => String(n).trim()).filter(Boolean)
-  const { picked, unknown } = pickAvatarsByNames(raw, keywords)
+  const { picked, unknown, matched } = pickAvatarsByNames(raw, keywords)
 
   // 先补齐立绘再组装视图：buildCharView 依赖本地是否已有立绘决定 avatar 字段
   const avatarIds = picked.map(a => String(a?.avatarId ?? '')).filter(Boolean)
@@ -279,7 +282,8 @@ export async function queryBuild (uid, opts = {}) {
     chars: all.slice(0, MAX_BUILD_CHARS),
     total: raw.length,
     matched: all.length,
-    filtered: keywords.length > 0,
+    // 只有「确实解析出角色并筛过」才算筛选；关键词全是错别字时照常出全部，只额外回传 unknown
+    filtered: matched.length > 0,
     unknown,
     roster,
     truncated: all.length > MAX_BUILD_CHARS,
