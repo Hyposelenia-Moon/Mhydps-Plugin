@@ -67,7 +67,7 @@ const Result = {
 const submitted = {
   priority: 7000,
   renderScale: 2,
-  proxy: 'http://127.0.0.1:7890',
+  proxy: 'http://proxy.example:8080',
   timeoutMs: 45000,
   cacheTtlMinutes: 15,
   pageSize: 20,
@@ -92,7 +92,7 @@ check('写入可被 YAML 解析', (() => {
 
 const written = YAML.parse(writtenText)
 check('写入值正确', written.priority === 7000 && written.renderScale === 2 && written.avatarEnabled === false)
-check('代理值正确', written.proxy === 'http://127.0.0.1:7890')
+check('代理值正确', written.proxy === 'http://proxy.example:8080')
 
 const roundTrip = configInfo.getConfigData()
 check('读回与提交一致', fields.every(f => JSON.stringify(roundTrip[f]) === JSON.stringify(submitted[f])), JSON.stringify(roundTrip))

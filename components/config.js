@@ -80,7 +80,7 @@ export function getPluginConfig () {
  * 请求代理地址（空串 = 直连）
  *
  * mhydps.cn 与 GitHub 在国内网络下直连会被重置（TLS 握手 RST），实测需走本地代理
- * （如 http://127.0.0.1:7890）。此处只做取值与修剪，不做合法性校验——
+ * （如 http://<代理主机>:<端口>）。此处只做取值与修剪，不做合法性校验——
  * 非法地址会在 MhydpsClient 里报出具体的连接错误。
  * @returns {string}
  */

@@ -26,7 +26,7 @@ const MAX_REDIRECT = 3
 
 /**
  * 取代理 agent；proxy 为空返回 undefined（直连）
- * @param {string} proxy - 形如 http://127.0.0.1:7890
+ * @param {string} proxy - 形如 http://<代理主机>:<端口>
  * @returns {Promise<object|undefined>}
  */
 async function resolveAgent (proxy) {

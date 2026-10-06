@@ -167,7 +167,7 @@ const statusData = {
   ageText: agoText(1000),
   ttlText: '30 分钟',
   staleText: '有效',
-  proxy: 'http://127.0.0.1:7890',
+  proxy: 'http://proxy.example:8080',
   sources: [
     { name: 'DPS数据库', count: teams.length },
     { name: '危战榜单', count: raids.length }
@@ -183,7 +183,7 @@ const status = await renderOnce('status', statusData, 'test-status')
 check('status 出图成功', Boolean(status.img), status.err)
 if (status.html) {
   checkRefs(status.html, path.dirname(path.join(appRoot, 'temp', 'html', 'Mhydps-Plugin', 'dps', 'status', 'x.html')), 'status', /(?:href|src)="([^"]+)"/g)
-  check('status：渲染了条数与代理', status.html.includes('DPS数据库') && status.html.includes('127.0.0.1:7890'))
+  check('status：渲染了条数与代理', status.html.includes('DPS数据库') && status.html.includes('proxy.example:8080'))
 }
 
 // ---- help ----

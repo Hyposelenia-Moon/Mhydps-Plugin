@@ -16,7 +16,7 @@ const cfgFile = path.join(cfgDir, 'config.yaml')
 fs.writeFileSync(cfgFile, [
   'priority: 8000',
   'renderScale: 9',
-  'proxy: "  http://127.0.0.1:7890  "',
+  'proxy: "  http://proxy.example:8080  "',
   'cacheTtlMinutes: 0',
   'pageSize: 999',
   'timeoutMs: 1',
@@ -52,7 +52,7 @@ check('renderScale 上限夹取', getRenderScale() === 3)
 check('pageSize 上限夹取为 20', getPageSize() === 20)
 check('timeoutMs 下限夹取为 3000', getTimeoutMs() === 3000)
 check('cacheTtlMinutes 非法值回落默认', getCacheTtlMinutes() === defaultConfig.cacheTtlMinutes)
-check('proxy 修剪空白', getProxy() === 'http://127.0.0.1:7890', JSON.stringify(getProxy()))
+check('proxy 修剪空白', getProxy() === 'http://proxy.example:8080', JSON.stringify(getProxy()))
 check('avatarEnabled 读到 false', getPluginConfig().avatarEnabled === false)
 
 // ---- 缺省兜底：配置文件不存在时用默认值 ----

@@ -110,10 +110,10 @@ export function supportGuoba () {
           field: 'proxy',
           label: '请求代理',
           helpMessage: '抓取 mhydps.cn 使用的代理，留空 = 直连',
-          bottomHelpMessage: '实测国内直连 www.mhydps.cn 会被重置（TLS 握手 RST），需要本地代理，如 http://127.0.0.1:7890',
+          bottomHelpMessage: '实测国内直连 www.mhydps.cn 会被重置（TLS 握手 RST），需要本地代理，如 http://<代理主机>:<端口>',
           component: 'Input',
           required: false,
-          componentProps: { placeholder: 'http://127.0.0.1:7890' }
+          componentProps: { placeholder: 'http://<代理主机>:<端口>' }
         },
         {
           field: 'timeoutMs',

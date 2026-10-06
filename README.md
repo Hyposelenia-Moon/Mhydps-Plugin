@@ -19,10 +19,10 @@ pnpm install --filter=Mhydps-Plugin
 
 依赖只有 `yaml`（读配置）与 `https-proxy-agent`（走代理拉数据）。
 
-**代理是必须配置的**：实测国内网络直连 `www.mhydps.cn` 会在 TLS 握手阶段被重置（`curl: (35) Recv failure: Connection was reset`），需在配置里填本地代理：
+**代理是必须配置的**：实测国内网络直连 `www.mhydps.cn` 会在 TLS 握手阶段被重置（`curl: (35) Recv failure: Connection was reset`），需在配置里填本地代理（地址与端口按你自己的代理软件填）：
 
 ```yaml
-proxy: 'http://127.0.0.1:7890'
+proxy: 'http://<代理主机>:<端口>'
 ```
 
 首次使用可以直接发查询命令（会自动拉取），也可以由主人执行 `#DPS更新` 立即拉取。
