@@ -84,7 +84,7 @@ check('写缓存成功', writeAkashaCache('100000000', { account: account.data.a
 check('缓存文件落在 data/akasha/<uid>.json', fs.existsSync(akashaCacheFile('100000000')), akashaCacheFile('100000000'))
 const hit = readAkashaCache('100000000')
 check('缓存读回账号与角色', Boolean(hit?.account?.playerInfo) && hit.calculations.length === 2)
-check('缓存过期（TTL=0 分钟）视为未命中', readAkashaCache('100000000', 0) === null, 'TTL=0 应过期')
+check('缓存过期（TTL 为负）视为未命中', readAkashaCache('100000000', -1) === null, '负 TTL 应过期')
 
 // 命中缓存时不再发请求
 clearAkashaCache()

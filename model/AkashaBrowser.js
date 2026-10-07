@@ -114,7 +114,10 @@ export async function akashaBrowserTransport (url, opts = {}) {
   const parsed = new URL(url)
   const apiPath = parsed.pathname + parsed.search
   const pathname = parsed.pathname
-  const interceptable = NEEDED.slice(0, 2).some(prefix => pathname.startsWith(prefix))
+  // 页面加载个人页时自己会请求这几个接口 → 可拦截（实测 200）
+  const interceptable = ['/api/user/', '/api/getCalculationsForUser/', '/api/builds/', '/api/artifacts'].some(
+    prefix => pathname.startsWith(prefix)
+  )
   const uidMatch = pathname.match(/\/(?:user|getCalculationsForUser)\/(\d{9,10})/)
   const uid = uidMatch?.[1] || ''
   const pageUrl = uid ? `https://akasha.cv/profile/${uid}` : 'https://akasha.cv/'

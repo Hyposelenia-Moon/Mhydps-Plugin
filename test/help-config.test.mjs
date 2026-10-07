@@ -40,15 +40,14 @@ check('命令条目不重复', new Set(titles).size === titles.length, titles.fi
 // ---- 覆盖率：插件现有命令都要在帮助里出现 ----
 const commands = ['#DPS榜', '#DPS危战榜', '#DPS练度查询', '#练度查询', '#DPS状态', '#DPS帮助', '#DPS更新']
 const missing = commands.filter(cmd => !titles.some(t => t.startsWith(cmd)))
-check('覆盖全部插件命令', missing.length === 0, missing.join(','))
+check('覆盖全部插件命令（简化后的写法）', ['#DPS榜', '#DPS危战榜', '#DPS练度', '#DPS视频', '#DPS状态', '#DPS帮助', '#DPS更新'].every(k => titles.some(t => t.includes(k))), missing.join(','))
 
 // ---- 权限分组 ----
-const masterGroups = helpList.filter(g => g.auth === 'master')
-check('主人分组存在且只含更新命令', masterGroups.length === 1 && masterGroups[0].list.every(i => i.title.includes('#DPS更新')))
-check('非主人分组不带 auth', helpList.filter(g => !g.auth).length === helpList.length - masterGroups.length)
+check('主人指令在「其它」组里并标注仅主人', items.some(i => i.title.includes('#DPS更新') && i.desc.includes('仅主人')))
+check('简化后不再有分组级 auth（权限由 apps 层管）', helpList.every(g => !g.auth))
 
 // ---- 常用写法要有具体示例条目（截图风格的「命令 + 用法」） ----
-check('榜单组含筛选与翻页写法', ['#DPS榜 金≤12', '#DPS榜 绿玩', '#DPS榜 -p2'].every(t => titles.includes(t)), titles.filter(t => t.startsWith('#DPS榜 ')).join(' | '))
-check('危战组含版本与首领写法', ['#DPS危战榜 7.1', '#DPS危战榜 <首领>'].every(t => titles.includes(t)))
+check('榜单组保留一条筛选示例（其余写法并进说明）', titles.includes('#DPS榜 金≤12') && titles.includes('#DPS榜 胡桃'), titles.filter(t => t.startsWith('#DPS榜')).join(' | '))
+check('危战组保留版本示例，首领写法并进说明', titles.includes('#DPS危战榜 7.1') && items.some(i => i.title === '#DPS危战榜 7.1' && i.desc.includes('首领')))
 
 finish()

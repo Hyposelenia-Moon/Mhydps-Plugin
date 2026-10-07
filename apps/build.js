@@ -10,28 +10,29 @@ import {
 } from '../model/AkashaClient.js'
 import { akashaBrowserTransport } from '../model/AkashaBrowser.js'
 import {
-  buildAkashaView,
-  collectNameWords,
-  filterAkashaChars
-} from '../modules/akashaQuery.js'
+  akashaAttr,
+  buildAkashaAvatar,
+  loadMiao,
+  renderMiaoPanel,
+  toPanelData
+} from '../model/MiaoPanel.js'
+import { buildAkashaView, collectNameWords, filterAkashaChars } from '../modules/akashaQuery.js'
 import { akashaText } from '../modules/formatText.js'
-import { respond } from '../modules/respond.js'
 
 const config = getPluginConfig()
 
 /**
- * `#DPS练度查询 [角色…] [UID]` —— 数据源：akasha.cv（参数顺序随意，两者都可省其一）
- *   #DPS练度查询 123456789        该 UID 的练度（按名次排序）
+ * `#DPS练度查询 [角色…] [UID]` —— 数据源：akasha.cv；画面：miao-plugin 的面板
+ *   #DPS练度查询 123456789        该 UID 练度最好的那个角色的面板
  *   #DPS练度查询 胡桃             只看胡桃（UID 取配置 defaultUid）
  *   #DPS练度查询 胡桃 123456789   两者都给
  */
-const CMD_RE = /^#?(?:dps|DPS)?(?:练度查询|练度面板|练度)\s*([\s\S]*)$/
+const CMD_RE = /^#?(?:dps|DPS)?练度(?:查询)?\s*([\s\S]*)$/
 
 const TITLE = '#DPS练度查询'
 
-/** 没给 UID 也没配 defaultUid 时的用法提示 */
 const USAGE = [
-  `${TITLE} <UID> — 该 UID 在 akasha 上的角色练度（名次 / top% / 伤害）`,
+  `${TITLE} <UID> — 用 miao 的面板展示该 UID 在 akasha 上的练度`,
   `${TITLE} <角色> [UID] — 只看指定角色（可写多个，如「胡桃 夜兰」）`,
   '例：#DPS练度查询 胡桃　#DPS练度查询 胡桃 123456789',
   '未填 UID 时用配置项 defaultUid（锅巴 → 数据源二 · akasha.cv）'
@@ -43,7 +44,6 @@ export class MhydpsBuild extends plugin {
       name: 'Mhydps练度查询',
       dsc: '#DPS练度查询 [角色] [UID]',
       event: 'message',
-      // 7950 < 8000：练度命令先于宽泛的 #DPS 规则被检查
       priority: config.priority ? config.priority - 50 : 7950,
       rule: [
         { reg: CMD_RE, fnc: 'handleBuild', permission: 'all' }
@@ -52,10 +52,10 @@ export class MhydpsBuild extends plugin {
   }
 
   /**
-   * 练度查询 —— 数据全部来自 akasha.cv（mhydps 只有匿名配队榜，没有练度排名）
+   * 练度查询：akasha 取数（浏览器会话）→ miao 面板出图 → 失败回退文本
    *
-   * akasha 的 /api/ 在 Cloudflare 后面，纯 HTTP 会被 403 挡，所以取数走浏览器会话：
-   * setTransport(akashaBrowserTransport) → 打开个人页 / 拦截页面自身的 /api/ 响应。
+   * 面板里的数值全部来自 akasha：等级/命座/天赋/武器/面板 stats；
+   * 圣遗物区刻意留空（akasha 不提供副词条），由文本说明，不编数字。
    */
   async handleBuild (e) {
     const text = (e.msg.match(CMD_RE) || [])[1] || ''
@@ -75,21 +75,14 @@ export class MhydpsBuild extends plugin {
       return true
     }
 
-    // 角色筛选靠本插件的角色表（akasha 返回英文名，别名只有本地表认）
     const records = args.names.map(n => findCharacter(n)).filter(Boolean)
+    const notices = []
+    if (args.unknown.length) notices.push(`未识别的参数：${args.unknown.join('、')}`)
 
-    let view
+    let profile
     try {
       setTransport(akashaBrowserTransport)
-      const profile = await fetchAkashaProfile(uid)
-      // 武器/套装名中文化；拿不到就保留英文，不影响主体数据
-      let translations = {}
-      try {
-        translations = await fetchAkashaTranslations(collectNameWords(profile.calculations))
-      } catch (err) {
-        logger?.warn?.(`[Mhydps] akasha 名字中文化失败（保留英文）：${err?.message || err}`)
-      }
-      view = buildAkashaView(profile, { translations })
+      profile = await fetchAkashaProfile(uid)
     } catch (err) {
       logger?.error?.(`[Mhydps] akasha 练度查询失败：${err?.message || err}`)
       await e.reply([
@@ -99,32 +92,66 @@ export class MhydpsBuild extends plugin {
       return true
     }
 
+    let translations = {}
+    try {
+      translations = await fetchAkashaTranslations(collectNameWords(profile.calculations))
+    } catch (err) {
+      logger?.warn?.(`[Mhydps] akasha 名字中文化失败（保留英文）：${err?.message || err}`)
+    }
+
+    const view = buildAkashaView(profile, { translations })
     let chars = view.chars
-    const notices = []
-    if (args.unknown.length) notices.push(`未识别的参数：${args.unknown.join('、')}`)
     if (records.length) {
       chars = filterAkashaChars(chars, records)
       notices.push(chars.length
         ? `已按 ${args.names.join('、')} 筛选（命中 ${chars.length} 个）`
         : `akasha 上没有 ${args.names.join('、')} 的记录（该号收录 ${view.total} 个角色）`)
     }
-    if (view.total > view.chars.length) notices.push(`收录角色较多，仅列前 ${view.chars.length} 个`)
-
-    const data = {
-      title: TITLE,
-      player: view.player,
-      chars,
-      total: view.total,
-      notice: notices.join('　'),
-      source: AKASHA_NAME,
-      copyright: COPYRIGHT
-    }
-
     if (!chars.length) {
       await e.reply([notices.join('\n'), akashaText({ ...view, chars: [] }, TITLE)].filter(Boolean).join('\n'))
       return true
     }
 
-    return await respond(e, 'build', data, () => akashaText({ ...view, chars }, TITLE))
+    // miao 面板一屏一角色：取名次最好的那个（角色名命中时通常就一个）
+    const target = chars[0]
+    const builds = profile.builds || []
+    const build = builds.find(b => String(b?.characterId) === String(target.id)) || null
+
+    let painted = false
+    if (!build) {
+      notices.push('akasha 没有返回该角色的 build 数据（等级/天赋/武器），本次不出面板')
+    } else {
+      try {
+        const miao = await loadMiao()
+        if (miao) {
+          const avatar = await buildAkashaAvatar(target.id, { ...build, uid })
+          if (avatar) {
+            const panelData = await toPanelData({
+              uid,
+              avatar,
+              attr: akashaAttr(build.stats, miao.Format)
+            })
+            if (panelData) painted = await renderMiaoPanel(e, panelData)
+          }
+        }
+      } catch (err) {
+        logger?.error?.(`[Mhydps] miao 面板渲染失败：${err?.message || err}`)
+      }
+    }
+
+    // 面板留空的圣遗物区必须说明原因（akasha 不提供副词条），不编数字
+    const notes = [
+      ...notices,
+      '面板数据源：akasha.cv（名次/伤害为 akasha 口径，与本站 DPS 榜不同）',
+      '圣遗物区留空：akasha 的接口只给主词条、不给副词条，故不渲染圣遗物卡与总分'
+    ].filter(Boolean)
+
+    if (painted) {
+      await e.reply(notes.join('\n'))
+      return true
+    }
+
+    await e.reply([notes.join('\n'), akashaText({ ...view, chars }, TITLE)].join('\n'))
+    return true
   }
 }

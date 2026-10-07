@@ -150,31 +150,6 @@ if (raid.html) {
   check('raid：已移除行尾视频列', !raid.html.includes('rank-side') && !raid.html.includes('video-mark'))
 }
 
-// ---- build：练度查询（数据源二 akasha，表格视图） ----
-const akashaAccount = loadFixture('akasha.account.sample.json').data.account
-const akashaCalcs = loadFixture('akasha.calc.sample.json').data
-const buildView = buildAkashaView({ uid: '100000000', account: akashaAccount, calculations: akashaCalcs })
-const buildData = {
-  title: '#DPS练度查询',
-  player: buildView.player,
-  chars: buildView.chars,
-  total: buildView.total,
-  notice: '已按 胡桃 筛选（命中 1 个）',
-  source: AKASHA_NAME,
-  copyright: COPYRIGHT
-}
-const build = await renderOnce('build', buildData, 'test-build')
-check('build 出图成功', Boolean(build.img), build.err)
-if (build.html) {
-  checkRefs(build.html, path.dirname(path.join(appRoot, 'temp', 'html', 'Mhydps-Plugin', 'dps', 'build', 'x.html')), 'build', /(?:href|src)="([^"]+)"/g)
-  check('build：渲染了账号与角色', build.html.includes('测试玩家') && build.html.includes('胡桃'))
-  check('build：渲染了名次与伤害', build.html.includes('top 0.79%') && build.html.includes('115.8 万') && build.html.includes('COMBO'))
-  check('build：渲染了武器与套装', build.html.includes('Ballad of the Fjords') && /Hunter\×4|Gladiator/.test(build.html))
-  check('build：标注了数据源与口径', build.html.includes(AKASHA_NAME) && build.html.includes('与本站 DPS 榜不同'))
-  check('build：渲染了筛选提示', build.html.includes('已按 胡桃 筛选'))
-  check('build：不放整页插画底（练度页是表格）', !build.html.includes('page-bg'))
-}
-
 // ---- status ----
 const statusData = {
   siteName: SITE_NAME,
@@ -242,7 +217,7 @@ const varUses = (compCss.match(/var\(--/g) || []).length
 check('组件样式全部走变量着色', varUses >= 40, `${varUses} 处`)
 
 const templateColors = []
-for (const f of ['help.html', 'rank.html', 'raid.html', 'status.html', 'build.html']) {
+for (const f of ['help.html', 'rank.html', 'raid.html', 'status.html']) {
   const text = fs.readFileSync(path.join(pluginRoot, 'resources', 'dps', f), 'utf8')
   const hits = text.match(/#[0-9a-fA-F]{3,8}\b|rgba?\(/g)
   if (hits) templateColors.push(`${f}:${hits.join('/')}`)
@@ -251,9 +226,10 @@ check('模板内不写死颜色（全部走变量）', templateColors.length ===
 
 // 练度面板整页由 miao-plugin 的模板渲染（apps/build.js → model/MiaoBridge.js），
 // 所以本插件里既不该有它的模板，也不该有它的样式。
-check('本插件不再自带练度面板模板/样式（交给 miao）', !fs.existsSync(path.join(pluginRoot, 'resources', 'dps', 'build.html')) &&
+check('练度页不自绘模板/样式（整页交给 miao 的面板代码）', !fs.existsSync(path.join(pluginRoot, 'resources', 'dps', 'build.html')) &&
   !fs.existsSync(path.join(pluginRoot, 'resources', 'profile', 'panel.css')))
-check('练度页底图已删除（面板自带立绘，不需要整页背景）', !fs.existsSync(path.join(pluginRoot, 'resources', 'common', 'bg-build.jpg')))
+check('练度页底图已删除（面板自带立绘）', !fs.existsSync(path.join(pluginRoot, 'resources', 'common', 'bg-build.jpg')))
+check('练度页渲染走 miao 的模板（本插件只提供数据）', fs.existsSync(path.join(pluginRoot, 'model', 'MiaoPanel.js')))
 
 // ---- 字体：原神字体随包分发（不联网下载），数字走提瓦特数字 ----
 check('声明了原神中文字体 YS（汉仪文黑）', /@font-face\s*\{[^}]*font-family:\s*'YS'/s.test(baseCss))
@@ -270,7 +246,7 @@ check('字体文件非空（>1KB）', fontUrls.every(u => {
 }))
 
 const fontHardcode = []
-for (const f of ['help.html', 'rank.html', 'raid.html', 'status.html', 'build.html']) {
+for (const f of ['help.html', 'rank.html', 'raid.html', 'status.html']) {
   const text = fs.readFileSync(path.join(pluginRoot, 'resources', 'dps', f), 'utf8')
   if (/font-family/.test(text)) fontHardcode.push(f)
 }

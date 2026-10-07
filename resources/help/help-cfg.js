@@ -18,48 +18,32 @@ export const helpList = [
   {
     group: '榜单查询',
     list: [
-      { title: '#DPS榜', desc: 'DPS 配队总榜（按期望 DPS 降序）；「榜」字可省：#DPS 亦可' },
-      { title: '#DPS榜 <角色>', desc: '只看含该角色的配队，支持别名（火神 / 龟 / 爷）' },
-      { title: '#DPS榜 <角色> 主C', desc: '限定该角色为阵容主 C（配队第一位）' },
-      { title: '#DPS榜 金≤12', desc: '按总金数筛选：12金 / 金12 / 金≥8 / 8-12金' },
-      { title: '#DPS榜 绿玩', desc: '只看无宏、无连点的记录' },
-      { title: '#DPS榜 标签:宏', desc: '按站点标签筛，可为赛事名（如 总伤杯S3）' },
-      { title: '#DPS榜 -p2', desc: '翻页：-p2 / 第2页 / 页:2' },
-      { title: '#DPS榜视频 3', desc: '发第 3 名的 B 站视频链接（可带上面的筛选）' }
+      { title: '#DPS榜', desc: 'DPS 配队总榜；「榜」字可省，如 #DPS' },
+      { title: '#DPS榜 胡桃', desc: '只看含该角色的配队，支持别名（火神 / 桃 / 爷）' },
+      { title: '#DPS榜 金≤12', desc: '金数筛选：金≥8 / 8-12金 亦可；可加 主C / 绿玩 / -p2' }
     ]
   },
   {
     group: '危战榜单',
     list: [
-      { title: '#DPS危战榜', desc: '危战榜：金数升序，同金数比耗时' },
-      { title: '#DPS危战榜 7.1', desc: '按版本筛选（5.7 ~ 当前）' },
-      { title: '#DPS危战榜 <首领>', desc: '按首领筛，可只写简称（如 矮灵雕刻师）' },
-      { title: '#DPS危战榜 <角色>', desc: '只看含该角色的记录' },
-      { title: '#DPS危战榜 金≤4', desc: '低金成绩常用写法' },
-      { title: '#DPS危战榜视频 3', desc: '发第 3 名的 B 站视频链接' }
+      { title: '#DPS危战榜', desc: '幽境危战收录：金数升序，同金数比耗时' },
+      { title: '#DPS危战榜 7.1', desc: '按版本或首领筛（首领可只写简称，如 矮灵雕刻师）' }
     ]
   },
   {
     group: '练度查询',
     list: [
-      { title: '#DPS练度查询 <UID>', desc: 'akasha 练度：名次 / top% / 伤害 / 武器 / 套装' },
-      { title: '#DPS练度查询 <角色>', desc: '只看指定角色（如 胡桃 / 桃）；UID 取配置默认值' },
-      { title: '#DPS练度查询 <角色> <UID>', desc: '角色与 UID 顺序随意、可写多个角色' },
-      { title: '#练度查询 <UID>', desc: '简写，可省略 DPS 前缀' }
+      { title: '#DPS练度 <UID>', desc: 'akasha 练度面板（名次 / top% / 伤害 / 武器）' },
+      { title: '#DPS练度 胡桃', desc: '只看指定角色；UID 取配置 defaultUid' }
     ]
   },
   {
-    group: '插件信息',
+    group: '其它',
     list: [
-      { title: '#DPS帮助', desc: '显示本帮助页' },
-      { title: '#DPS状态', desc: '缓存时间、数据条数、立绘缓存与代理' }
-    ]
-  },
-  {
-    group: '数据管理（仅主人）',
-    auth: 'master',
-    list: [
-      { title: '#DPS更新', desc: '立即拉取全量榜单并刷新缓存' }
+      { title: '#DPS视频 3', desc: '发第 3 名的 B 站视频；危战榜用 #DPS危战视频 3' },
+      { title: '#DPS状态', desc: '两份数据源的缓存时间、条数与代理' },
+      { title: '#DPS帮助', desc: '显示本页' },
+      { title: '#DPS更新', desc: '立即刷新榜单缓存（仅主人）' }
     ]
   }
 ]

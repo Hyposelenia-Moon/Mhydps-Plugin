@@ -15,6 +15,7 @@
  * 端点（实测字段见 test/fixtures/akasha.*.sample.json）：
  *   /api/user/<uid>                    → data.account（playerInfo：昵称/AR/深渊/剧诗/幽境危战）
  *   /api/getCalculationsForUser/<uid>  → data[]（每角色：命座/武器/套装 + calculations 名次与伤害）
+ *   /api/builds/?uid=<uid>             → data[]（每角色：等级/天赋/武器/套装主词条/面板 stats）
  *   /api/textmap/<lang>?words[]=…       → 英文名批量中文化（角色名走本插件角色表，不必请求）
  */
 import fs from 'node:fs'
@@ -176,6 +177,29 @@ export async function fetchAkashaCalculations (uid, opts = {}) {
 }
 
 /**
+ * 角色 build（等级/命座/天赋/武器/套装主词条/akasha 自己的面板数值）
+ * miao 面板需要的字段都在这里：propMap、talentsLevelMap、weapon、artifactObjects、stats。
+ * @param {string} uid
+ * @param {object} [opts]
+ * @returns {Promise<object[]>}
+ */
+export async function fetchAkashaBuilds (uid, opts = {}) {
+  const json = await akashaGet('builds/', {
+    sort: 'critValue',
+    order: -1,
+    size: 50,
+    page: 1,
+    filter: '',
+    uids: '',
+    p: '',
+    fromId: '',
+    li: '',
+    uid
+  }, opts)
+  return Array.isArray(json?.data) ? json.data : []
+}
+
+/**
  * 批量中文化（akasha 的角色/武器/套装名默认是英文）
  * @param {string[]} words
  * @param {object} [opts]
@@ -197,12 +221,13 @@ export async function fetchAkashaTranslations (words, opts = {}) {
 export async function fetchAkashaProfile (uid, opts = {}) {
   if (!opts.force) {
     const hit = readAkashaCache(uid)
-    if (hit) return { uid: String(uid), account: hit.account, calculations: hit.calculations || [], cached: true, fetchedAt: hit.fetchedAt }
+    if (hit) return { uid: String(uid), account: hit.account, calculations: hit.calculations || [], builds: hit.builds || [], cached: true, fetchedAt: hit.fetchedAt }
   }
-  const [account, calculations] = await Promise.all([
+  const [account, calculations, builds] = await Promise.all([
     fetchAkashaAccount(uid, opts),
-    fetchAkashaCalculations(uid, opts)
+    fetchAkashaCalculations(uid, opts),
+    fetchAkashaBuilds(uid, { ...opts, timeoutMs: Math.min(opts.timeoutMs || getAkashaTimeoutMs(), 15000) }).catch(() => [])
   ])
-  writeAkashaCache(uid, { account, calculations })
-  return { uid: String(uid), account, calculations, cached: false, fetchedAt: Date.now() }
+  writeAkashaCache(uid, { account, calculations, builds })
+  return { uid: String(uid), account, calculations, builds, cached: false, fetchedAt: Date.now() }
 }
