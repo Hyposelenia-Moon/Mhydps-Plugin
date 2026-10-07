@@ -27,6 +27,32 @@ proxy: 'http://<代理主机>:<端口>'
 
 首次使用可以直接发查询命令（会自动拉取），也可以由主人执行 `#DPS更新` 立即拉取。
 
+## 数据源
+
+本插件有两个**互不相通**的数据源，口径不同、图上也分别标注，不要互相解释：
+
+| | 数据源一 · mhydps.cn | 数据源二 · akasha.cv |
+|---|---|---|
+| 用途 | `#DPS榜` / `#DPS危战榜`（**已实现**） | `#DPS练度查询`（**接口层已就绪，命令待接**） |
+| 主体 | 匿名**配队记录**（1394 条，无 UID） | 按 **UID** 记录的角色练度 |
+| 关键数值 | 期望 DPS、金数、危战耗时 | 角色**名次** `ranking/outOf`（→ top%）、akasha 自己的伤害公式结果、幽境危战分 |
+| 取数方式 | 直连 HTTP（需配 `proxy`，国内直连会被 RST） | 直连 HTTP **会被 Cloudflare 挡**（403 挑战页），需浏览器会话 |
+| 锅巴分组 | `数据源一 · mhydps.cn（DPS榜 / 危战榜）` | `数据源二 · akasha.cv（练度查询）` |
+
+> 「查榜上人的练度」在两站数据上都做不到：mhydps 的榜单记录**没有 UID**（实测 1394 条里 0 条含 UID，
+> `info` 只是备注文本），akasha 的名字/武器/套装名默认是英文、且不与 mhydps 的匿名记录互相索引。
+> 想真正打通，只能请 mhydps 在收录记录里带上投稿者 UID。
+
+### 数据源二（akasha）接口层现状
+
+- 已实现：`model/AkashaClient.js`（端点拼装、取数注入、错误映射、`data/akasha/<uid>.json` 缓存）与
+  `modules/akashaQuery.js`（解析 → 账号画像 + 每角色名次/top%/伤害/武器/套装，支持按角色别名筛选），
+  另有 `formatText.akashaText()` 文本版；回归套件覆盖（`akasha-client` 18 项、`akasha-query` 38 项）。
+- 未实现（待与另一位开发者确认取数方式后再接）：命令入口、出图模板、浏览器会话取数。
+  目前默认取数实现是直连 HTTP，被 Cloudflare 挡住时抛 `AKASHA_BLOCKED`（不会静默给错数据）；
+  `setTransport()` 是留给浏览器会话的注入点。
+- 角色中文名走本插件角色表（akasha 只给 `Hu Tao` 这种英文名），武器/套装名走 akasha 的 `textmap` 中文化。
+
 ### 练度面板：整页复用 miao-plugin 的代码（需要装 miao-plugin）
 
 练度查询的**画面完全由 [miao-plugin](https://github.com/AxiuCN/miao-plugin)（AxiuCN 版）自己的代码产出**——本插件不自绘面板：

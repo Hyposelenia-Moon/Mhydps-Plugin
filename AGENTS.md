@@ -101,6 +101,16 @@ config/config.yaml.example  ← 参考默认值（入库，首次启动自动复
 - **改文字色或调蒙版后必须跑 `test/contrast.test.mjs`**（离线按令牌现算 WCAG：正文 ≥4.5:1、大字 ≥3:1、最小字号 ≥14px）；换了背景图还要跑 `tool/background/hero-contrast.ps1` 复核横幅文字。
 - `components/render.js` 的 `RES_PREFIX` 层级依赖框架把 HTML 写到 `temp/html/<插件名>/<APP>/<tpl>/`，改动模板命名前先读该文件注释。
 
+### 数据源（两条互不相通）
+
+- **数据源一 mhydps.cn**：榜单（`/api/teams`、`/api/teams2`）+ 危战榜单，走 `model/MhydpsClient.js`（必须带 Referer、需要 `proxy`）。榜单记录**匿名、无 UID**，不要试图把它与练度数据关联。
+- **数据源二 akasha.cv**：练度（`/api/user/<uid>`、`/api/getCalculationsForUser/<uid>`、`/api/textmap/<lang>`），走 `model/AkashaClient.js`。
+  - 它的 `/api/` 在 Cloudflare 后面：**纯 HTTP 取数会被 403 挑战页挡住**（实测 Node fetch 带浏览器 UA/Referer 也不行），可行的取数是浏览器会话（打开个人页、拦截页面自身的 /api/ 响应）。取数机制待定，因此 `setTransport()` 是明确的注入点，默认实现只负责把 `AKASHA_BLOCKED` 如实报出来。
+  - 口径独立：akasha 的 `result` 是它自己的伤害公式，`ranking/outOf` 是它的赛道榜；**不要与 mhydps 的期望 DPS 换算/比较**，出图与文案都要标数据源。
+  - 名字本地化：角色名走本插件角色表（akasha 给英文名），武器/套装名走 akasha 的 textmap。
+  - 缓存：`data/akasha/<uid>.json`，TTL 默认 30 分钟；接口非官方、随时可能变，失败必须降级而不是崩。
+- 锅巴表单按这两个数据源分组（外加「基础设置」与「（备用）miao 面板素材」），改配置键时保持分组语义。
+
 ### 练度面板（`#DPS练度查询`）
 
 - **练度面板整页复用 miao-plugin（AxiuCN 版）的代码，本插件不自绘**：`apps/build.js` 取数（站点 Enka 代理）→ `model/MiaoBridge.js` 用 miao 的 `EnkaData` / `Avatar` / `Attr` / `ArtisMark` 建面板模型 → 调 miao 的 `Common.render('character/profile-detail', ...)` 出图（模板、样式、图标、布局、缩放全是 miao 的）。

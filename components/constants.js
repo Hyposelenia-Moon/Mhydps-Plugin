@@ -1,9 +1,26 @@
 /** Mhydps 插件常量定义 */
 
-/** 站点信息（数据来源，只读展示用） */
+/** 站点信息（数据源一：mhydps.cn，只读展示用） */
 export const SITE_NAME = '原神DPS数据库'
 export const SITE_ORIGIN = 'https://www.mhydps.cn'
 export const SITE_HOST = 'www.mhydps.cn'
+
+/**
+ * 数据源二：akasha.cv（练度查询）
+ *
+ * akasha 是「按 UID 记录角色练度」的站点，与 mhydps.cn 是**两套口径**：
+ *   - mhydps：匿名配队记录的期望 DPS / 金数 / 危战耗时（本插件用它做榜单）
+ *   - akasha：单角色的伤害与名次（它自己的伤害公式与赛道榜），本插件用它做练度查询
+ * 两者数值不可互相解释，出图与文案都必须标注来源。
+ */
+export const AKASHA_NAME = 'akasha.cv'
+export const AKASHA_BASE = 'https://akasha.cv'
+/** 接口前缀（实测得出，非官方文档） */
+export const AKASHA_API = `${AKASHA_BASE}/api`
+/** 中文化语言码（角色名走本插件角色表，武器/套装名走它的 textmap） */
+export const AKASHA_LANG = 'zh-CN'
+/** 缓存目录（data/ 下） */
+export const AKASHA_CACHE_DIR = 'akasha'
 
 /**
  * 站点接口路径

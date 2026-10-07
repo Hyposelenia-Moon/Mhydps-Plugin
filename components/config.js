@@ -29,7 +29,13 @@ const defaultConfig = {
   defaultUid: '',
   profileImgDir: '',
   miaoResDir: '',
-  miaoPluginDir: ''
+  miaoPluginDir: '',
+  // ---- 数据源二：akasha.cv（练度查询） ----
+  akashaEnabled: true,
+  akashaProxy: '',
+  akashaTimeoutMs: 60000,
+  akashaCacheTtlMinutes: 30,
+  akashaMaxChars: 12
 }
 
 /**
@@ -129,6 +135,39 @@ export function getTimeoutMs () {
   const value = Number(getPluginConfig()?.timeoutMs)
   if (!Number.isFinite(value)) return defaultConfig.timeoutMs
   return Math.min(120000, Math.max(3000, Math.floor(value)))
+}
+
+/* ===================== 数据源二：akasha.cv（练度查询） ===================== */
+
+/** 练度查询开关（关掉后命令直接提示未启用，不发任何请求） */
+export function getAkashaEnabled () {
+  return getPluginConfig()?.akashaEnabled !== false
+}
+
+/** akasha 的代理（默认空 = 直连；akasha 不在墙内，通常不需要代理） */
+export function getAkashaProxy () {
+  return String(getPluginConfig()?.akashaProxy || '').trim()
+}
+
+/** akasha 单次请求超时（毫秒，范围 5s ~ 180s；页面加载比接口慢，默认 60s） */
+export function getAkashaTimeoutMs () {
+  const value = Number(getPluginConfig()?.akashaTimeoutMs)
+  if (!Number.isFinite(value)) return defaultConfig.akashaTimeoutMs
+  return Math.min(180000, Math.max(5000, Math.floor(value)))
+}
+
+/** akasha 缓存有效期（分钟，最小 1） */
+export function getAkashaCacheTtlMinutes () {
+  const value = Number(getPluginConfig()?.akashaCacheTtlMinutes)
+  if (!Number.isFinite(value) || value < 1) return defaultConfig.akashaCacheTtlMinutes
+  return Math.floor(value)
+}
+
+/** 练度查询单次最多展示的角色数（1 ~ 30） */
+export function getAkashaMaxChars () {
+  const value = Number(getPluginConfig()?.akashaMaxChars)
+  if (!Number.isFinite(value) || value < 1) return defaultConfig.akashaMaxChars
+  return Math.min(30, Math.floor(value))
 }
 
 export { pluginRoot, configDir, configFile, exampleFile, defaultConfig }

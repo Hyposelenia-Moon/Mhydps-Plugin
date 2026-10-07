@@ -6,7 +6,7 @@ priority: ${mhydps_priority}
 # 渲染缩放比例
 renderScale: ${mhydps_renderScale}
 
-# ---------- 网络 ----------
+# ---------- 数据源一 · mhydps.cn（DPS榜 / 危战榜） ----------
 # 抓取 mhydps.cn 使用的代理，留空 = 直连
 # 国内直连 www.mhydps.cn 会被重置（TLS 握手阶段 RST），需要本地代理
 proxy: "${mhydps_proxy}"
@@ -14,7 +14,7 @@ proxy: "${mhydps_proxy}"
 # 单次请求超时（毫秒）
 timeoutMs: ${mhydps_timeoutMs}
 
-# ---------- 缓存 ----------
+# ---------- 数据源一 · 缓存 ----------
 # 榜单数据缓存有效期（分钟）
 cacheTtlMinutes: ${mhydps_cacheTtlMinutes}
 
@@ -24,7 +24,7 @@ pageSize: ${mhydps_pageSize}
 # 是否缓存并渲染角色立绘
 avatarEnabled: ${mhydps_avatarEnabled}
 
-# ---------- 练度查询 ----------
+# ---------- 数据源二 · akasha.cv（练度查询） ----------
 # 默认 UID：命令里不写 UID 时用它（如「#DPS练度查询 胡桃」）
 defaultUid: "${mhydps_defaultUid}"
 
@@ -38,3 +38,19 @@ miaoPluginDir: "${mhydps_miaoPluginDir}"
 
 # miao-plugin 的 resources 目录（同上，用于反推插件位置），留空 = 自动探测
 miaoResDir: "${mhydps_miaoResDir}"
+
+# ---------- 数据源二 · akasha.cv 参数 ----------
+# 启用练度查询（数据来自 akasha.cv，mhydps.cn 没有练度排名）
+akashaEnabled: ${mhydps_akashaEnabled}
+
+# akasha 的代理，留空 = 直连（akasha 不在墙内）
+akashaProxy: "${mhydps_akashaProxy}"
+
+# akasha 单次请求超时（毫秒，5000 ~ 180000；需要浏览器会话时会明显偏慢）
+akashaTimeoutMs: ${mhydps_akashaTimeoutMs}
+
+# akasha 练度数据缓存有效期（分钟）
+akashaCacheTtlMinutes: ${mhydps_akashaCacheTtlMinutes}
+
+# 一次练度查询最多列几个角色（1 ~ 30）
+akashaMaxChars: ${mhydps_akashaMaxChars}

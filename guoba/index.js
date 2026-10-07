@@ -5,7 +5,8 @@
  *   mhydps_priority, mhydps_renderScale,
  *   mhydps_proxy, mhydps_timeoutMs,
  *   mhydps_cacheTtlMinutes, mhydps_pageSize, mhydps_avatarEnabled,
- *   mhydps_defaultUid, mhydps_profileImgDir, mhydps_miaoPluginDir, mhydps_miaoResDir
+ *   mhydps_defaultUid, mhydps_profileImgDir, mhydps_miaoPluginDir, mhydps_miaoResDir,
+ *   mhydps_akashaEnabled, mhydps_akashaProxy, mhydps_akashaTimeoutMs, mhydps_akashaCacheTtlMinutes, mhydps_akashaMaxChars
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -38,7 +39,12 @@ const TEMPLATE_VARS = {
   defaultUid: 'mhydps_defaultUid',
   profileImgDir: 'mhydps_profileImgDir',
   miaoPluginDir: 'mhydps_miaoPluginDir',
-  miaoResDir: 'mhydps_miaoResDir'
+  miaoResDir: 'mhydps_miaoResDir',
+  akashaEnabled: 'mhydps_akashaEnabled',
+  akashaProxy: 'mhydps_akashaProxy',
+  akashaTimeoutMs: 'mhydps_akashaTimeoutMs',
+  akashaCacheTtlMinutes: 'mhydps_akashaCacheTtlMinutes',
+  akashaMaxChars: 'mhydps_akashaMaxChars'
 }
 
 /** 默认值（模板变量替换时的兜底） */
@@ -53,7 +59,12 @@ const DEFAULTS = {
   mhydps_defaultUid: '',
   mhydps_profileImgDir: '',
   mhydps_miaoPluginDir: '',
-  mhydps_miaoResDir: ''
+  mhydps_miaoResDir: '',
+  mhydps_akashaEnabled: 'true',
+  mhydps_akashaProxy: '',
+  mhydps_akashaTimeoutMs: '60000',
+  mhydps_akashaCacheTtlMinutes: '30',
+  mhydps_akashaMaxChars: '12'
 }
 
 /**
@@ -114,7 +125,7 @@ export function supportGuoba () {
         },
 
         // ==================== 网络 ====================
-        { label: '网络', component: 'SOFT_GROUP_BEGIN' },
+        { label: '数据源一 · mhydps.cn（DPS榜 / 危战榜）', component: 'SOFT_GROUP_BEGIN' },
         {
           field: 'proxy',
           label: '请求代理',
@@ -135,7 +146,6 @@ export function supportGuoba () {
         },
 
         // ==================== 缓存 ====================
-        { label: '缓存', component: 'SOFT_GROUP_BEGIN' },
         {
           field: 'cacheTtlMinutes',
           label: '缓存有效期（分钟）',
@@ -165,16 +175,63 @@ export function supportGuoba () {
         },
 
         // ==================== 练度查询 ====================
-        { label: '练度查询', component: 'SOFT_GROUP_BEGIN' },
+        { label: '数据源二 · akasha.cv（练度查询）', component: 'SOFT_GROUP_BEGIN' },
         {
           field: 'defaultUid',
           label: '默认 UID',
-          helpMessage: '命令里不写 UID 时用它',
+          helpMessage: '练度查询命令里不写 UID 时用它',
           bottomHelpMessage: '填了以后可以直接「#DPS练度查询 胡桃」。留空则必须带 9 位 UID',
           component: 'Input',
           required: false,
           componentProps: { placeholder: '123456789' }
         },
+        {
+          field: 'akashaEnabled',
+          label: '启用练度查询',
+          helpMessage: '练度数据来自 akasha.cv（本站的 mhydps.cn 没有练度排名）',
+          bottomHelpMessage: '关闭后 #DPS练度查询 只提示未启用，不发任何请求',
+          component: 'Switch',
+          required: true,
+          componentProps: { defaultValue: true }
+        },
+        {
+          field: 'akashaProxy',
+          label: '请求代理（akasha）',
+          helpMessage: 'akasha.cv 的代理，留空 = 直连',
+          bottomHelpMessage: 'akasha 不在墙内，通常直连即可；只有你本机确实需要时才填，格式 http://<代理主机>:<端口>',
+          component: 'Input',
+          required: false,
+          componentProps: { placeholder: '留空 = 直连' }
+        },
+        {
+          field: 'akashaTimeoutMs',
+          label: '请求超时（毫秒，akasha）',
+          helpMessage: 'akasha 取数单次最大等待',
+          bottomHelpMessage: '默认 60000 = 60 秒。它需要浏览器会话取数时会明显偏慢',
+          component: 'InputNumber',
+          required: true,
+          componentProps: { min: 5000, max: 180000, step: 1000, defaultValue: 60000 }
+        },
+        {
+          field: 'akashaCacheTtlMinutes',
+          label: '缓存有效期（分钟，akasha）',
+          helpMessage: '练度数据缓存多久',
+          bottomHelpMessage: '默认 30 分钟，与榜单一致；接口非官方，调太小容易触发它的限流',
+          component: 'InputNumber',
+          required: true,
+          componentProps: { min: 1, max: 1440, defaultValue: 30 }
+        },
+        {
+          field: 'akashaMaxChars',
+          label: '最多展示角色数（akasha）',
+          helpMessage: '一次练度查询最多列几个角色',
+          bottomHelpMessage: '默认 12，上限 30。超出按名次先后截断',
+          component: 'InputNumber',
+          required: true,
+          componentProps: { min: 1, max: 30, defaultValue: 12 }
+        },
+
+        { label: '（备用）miao 面板素材', component: 'SOFT_GROUP_BEGIN' },
         {
           field: 'profileImgDir',
           label: '面板立绘图库目录',
@@ -217,7 +274,12 @@ export function supportGuoba () {
           defaultUid: cfg.defaultUid ?? '',
           profileImgDir: cfg.profileImgDir ?? '',
           miaoPluginDir: cfg.miaoPluginDir ?? '',
-          miaoResDir: cfg.miaoResDir ?? ''
+          miaoResDir: cfg.miaoResDir ?? '',
+          akashaEnabled: cfg.akashaEnabled ?? true,
+          akashaProxy: cfg.akashaProxy ?? '',
+          akashaTimeoutMs: cfg.akashaTimeoutMs ?? 60000,
+          akashaCacheTtlMinutes: cfg.akashaCacheTtlMinutes ?? 30,
+          akashaMaxChars: cfg.akashaMaxChars ?? 12
         }
       },
 

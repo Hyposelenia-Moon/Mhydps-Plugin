@@ -5,6 +5,7 @@
  * 此时用这里拼的文字版把同样的信息发出去，保证命令在降级环境下可用。
  */
 import { COPYRIGHT, SITE_NAME, formatTime } from '../components/constants.js'
+import { bigNumText } from './akashaQuery.js'
 
 /** 榜单页脚（数据来源与抓取时间） */
 function footer (result) {
@@ -152,3 +153,35 @@ export function buildText (result, title = '#DPS练度查询') {
 
 /** 版权行（状态页/帮助页文本回退用） */
 export const copyrightLine = COPYRIGHT
+
+/**
+ * 练度查询文本版（数据源：akasha.cv）
+ *
+ * 口径必须写在文本里：akasha 的名次/伤害是它自己的公式与赛道榜，与本站榜单的期望 DPS 无关。
+ * @param {object} view - akashaQuery.buildAkashaView 的返回值
+ * @param {string} [title]
+ * @returns {string}
+ */
+export function akashaText (view, title = '#DPS练度查询') {
+  const p = view.player
+  const lines = [
+    `${title}｜${p.nickname || '未知昵称'}（UID ${p.uid}）`,
+    `冒险等阶 ${p.level}　成就 ${p.achievements}　深境 ${p.abyss.floor}-${p.abyss.chamber}（${p.abyss.stars}★）　剧诗 ${p.theater.stars}★` +
+      (p.stygian.score ? `　幽境危战 ${p.stygian.score} 分（${p.stygian.seconds}s）` : ''),
+    `公开角色 ${p.owned}　akasha 收录 ${view.total}${view.total > view.chars.length ? `（仅列前 ${view.chars.length} 个）` : ''}`,
+    ''
+  ]
+  for (const c of view.chars) {
+    const best = c.best
+    const rank = best
+      ? `${best.short || '主赛道'} ${best.topText}（${best.ranking}/${best.outOf}）· 伤害 ${bigNumText(best.result)}`
+      : '暂无 akasha 计算'
+    lines.push(`【${c.name}】${c.constellation}命　武器 ${c.weapon.name || '-'}${c.weapon.refinement ? ` 精${c.weapon.refinement}` : ''}`)
+    lines.push(`　${rank}`)
+    if (c.sets.length) lines.push(`　套装：${c.sets.map(s => `${s.name}×${s.count}`).join('，')}`)
+    lines.push('')
+  }
+  if (!view.chars.length) lines.push('akasha 没有该 UID 的角色练度记录')
+  lines.push(`数据：akasha.cv（排名与伤害为 akasha 口径，与本站 DPS 榜不同）`)
+  return lines.join('\n')
+}

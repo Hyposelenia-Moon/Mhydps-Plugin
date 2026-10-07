@@ -34,6 +34,7 @@ pnpm install            # 在插件目录执行；或把插件放进 bot 的 plu
 - 榜单类套件用 `test/fixtures/teams.sample.json`、`teams2.sample.json`（站点 `/api/teams`、`/api/teams2` 的字段结构，值已改写）。
 - 练度类套件用 `test/fixtures/enka.sample.json`（Enka 结构的最小样例）。
 - 立绘图库类套件不读真实安装：用 `MHYDPS_PROFILE_IMG` 指向 `test/.test-tmp/` 里自建的假图库。
+- akasha 类套件全程离线：用 `setTransport()` 注入假取数，fixtures 是脱敏后的真实响应（`akasha.account.sample.json` / `akasha.calc.sample.json`）。
 - `miao-bridge` 需要本机装了 miao-plugin（工作区里可用 `MHYDPS_MIAO_PLUGIN` 指向它）；没装就跳过。
 - **套件不发真实请求**：真实接口的正确性只能靠人工验证（`#DPS更新` + 三条查询命令）。
 
@@ -78,4 +79,6 @@ test/
 | `video-lookup` | 名次取词、按名次取视频、越界与空结果的兜底文案 |
 | `contrast` | 深色主题令牌的 WCAG AA 现算 + 最小字号 + 「直接压在插画上的容器必须自带暗底」 |
 | `profile-img` | 面板立绘图库：目录探测、按角色名匹配、稳定选图、缺失降级 |
+| `akasha-client` | akasha 接口层：端点拼装、取数注入、错误映射（403 挑战页/404/非 JSON）、缓存往返与失效 |
+| `akasha-query` | akasha 解析：账号画像、名次→top%、赛道、名字中文化、筛选与截断、文本回退 |
 | `miao-bridge` | 复用 miao-plugin 面板代码的桥接：`ival→val` 归一化、按 itemId 解析名字、伤害计算传空（缺 miao 时跳过） |

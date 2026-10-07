@@ -6,7 +6,7 @@ priority: 8000
 # 渲染缩放比例（0.5 ~ 3，越大越清晰但渲染越慢）
 renderScale: 1.5
 
-# ---------- 网络 ----------
+# ---------- 数据源一 · mhydps.cn（DPS榜 / 危战榜） ----------
 # 抓取 mhydps.cn 使用的代理，留空 = 直连
 # 实测国内网络直连 www.mhydps.cn 会被重置（TLS 握手阶段 RST），需要本地代理才能拉取
 # 例：http://<代理主机>:<端口>
@@ -15,7 +15,7 @@ proxy: ''
 # 单次请求超时（毫秒，3000 ~ 120000）
 timeoutMs: 30000
 
-# ---------- 缓存 ----------
+# ---------- 数据源一 · 缓存 ----------
 # 榜单数据缓存有效期（分钟）：超过后下一次查询会自动重新拉取
 cacheTtlMinutes: 30
 
@@ -25,21 +25,31 @@ pageSize: 10
 # 是否缓存并渲染角色立绘（关闭后成图里以角色名文字占位）
 avatarEnabled: true
 
-# ---------- 练度查询 ----------
+# ---------- 数据源二 · akasha.cv（练度查询） ----------
 # 默认 UID：命令里不写 UID 时用它（例：直接发「#DPS练度查询 胡桃」）
 defaultUid: ''
 
-# 面板立绘图库根目录（含 normal-character 的那一层目录），留空 = 自动探测
-# 自动探测顺序：
-#   plugins/ProfileImg-Plugin/resources/gallery/ProfileImg/miao-plugin-ProfileImg
-#   plugins/miao-plugin/resources/profile
-# 图库（AxiuCN/miao-plugin-ProfileImg，300MB+）需自行安装，本插件只读引用、不随包分发
+
+# ---------- 数据源二 · akasha.cv（练度查询） ----------
+# 启用练度查询：练度数据来自 akasha.cv（mhydps.cn 只有匿名配队榜，没有练度排名）
+# 实测 akasha 的 /api/ 在 Cloudflare 后面，纯 HTTP 取数会被挡（403 挑战页），
+# 取数机制（浏览器会话）还在确认中；关闭本项后该命令只提示未启用，不发任何请求
+akashaEnabled: true
+
+# akasha 的代理，留空 = 直连（akasha 不在墙内，通常直连即可）
+akashaProxy: ''
+
+# akasha 单次请求超时（毫秒，5000 ~ 180000）
+akashaTimeoutMs: 60000
+
+# akasha 练度数据缓存有效期（分钟，最小 1）
+akashaCacheTtlMinutes: 30
+
+# 一次练度查询最多列几个角色（1 ~ 30）
+akashaMaxChars: 12
+
+# ---------- （备用）miao 面板素材 ----------
+# 这三项只服务「用 miao-plugin 渲染面板」的备用路径（练度查询已改用 akasha，不再走它）
 profileImgDir: ''
-
-# miao-plugin 目录（面板出图完全复用它的模板与静态表），留空 = 自动探测
-# 依次尝试：miaoPluginDir → miaoResDir 的上级 → plugins/miao-plugin
 miaoPluginDir: ''
-
-# miao-plugin 的 resources 目录（同上，用于反推 miao-plugin 位置），留空 = 自动探测
-# 未安装 miao-plugin 时练度查询会回退纯文本输出
 miaoResDir: ''
