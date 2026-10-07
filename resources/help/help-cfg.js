@@ -33,8 +33,8 @@ export const helpList = [
   {
     group: '练度查询',
     list: [
-      { title: '#DPS练度 <UID>', desc: 'akasha 练度面板（名次 / top% / 伤害 / 武器）' },
-      { title: '#DPS练度 胡桃', desc: '只看指定角色；UID 取配置 defaultUid' }
+      { title: '#DPS练度查询 <UID>', desc: 'akasha 练度面板（名次 / top% / 伤害 / 武器）' },
+      { title: '#DPS练度查询 胡桃', desc: '只看指定角色；UID 取配置 defaultUid' }
     ]
   },
   {

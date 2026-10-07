@@ -27,7 +27,7 @@ const config = getPluginConfig()
  *   #DPS练度查询 胡桃             只看胡桃（UID 取配置 defaultUid）
  *   #DPS练度查询 胡桃 123456789   两者都给
  */
-const CMD_RE = /^#?(?:dps|DPS)?练度(?:查询)?\s*([\s\S]*)$/
+const CMD_RE = /^#?(?:dps|DPS)练度查询\s*([\s\S]*)$/
 
 const TITLE = '#DPS练度查询'
 

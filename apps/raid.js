@@ -9,7 +9,7 @@ import { respond, suggestLine } from '../modules/respond.js'
 const config = getPluginConfig()
 
 /** `#DPS危战榜` / `#危战榜` / `#DPS危战排行榜` */
-const CMD_RE = /^#?(?:dps|DPS)?危战榜?(?!视频)\s*([\s\S]*)$/
+const CMD_RE = /^#?(?:dps|DPS)危战榜?(?!视频)\s*([\s\S]*)$/
 
 const TITLE = '#DPS危战榜'
 

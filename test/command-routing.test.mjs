@@ -46,8 +46,9 @@ check('危战视频入口不误吞榜单视频命令', !raidVideo.test('#DPS视�
 check('#DPS榜 与 #DPS 都命中榜单入口', rankCmd.test('#DPS榜') && rankCmd.test('#DPS'))
 check('#DPS榜 胡桃 12金 命中榜单入口', rankCmd.test('#DPS榜 胡桃 12金') && rankCmd.test('#DPS 胡桃 12金'))
 check('#DPS危战榜 / #DPS危战 命中危战入口', raidCmd.test('#DPS危战榜') && raidCmd.test('#DPS危战 7.1'))
-check('#DPS练度 <UID> 与 #DPS练度查询 <UID> 都命中练度入口', buildCmd.test('#DPS练度 100000000') && buildCmd.test('#DPS练度查询 100000000'))
-check('#DPS练度 <角色> 命中练度入口', buildCmd.test('#DPS练度 胡桃') && buildCmd.test('#DPS练度 胡桃 100000000'))
+check('#DPS练度查询 <UID> 命中练度入口', buildCmd.test('#DPS练度查询 100000000'))
+check('省略「查询」或前缀不再命中（避免抢别的插件的 #练度）', !buildCmd.test('#DPS练度 100000000') && !buildCmd.test('#练度查询 100000000'))
+check('#DPS练度查询 <角色> [UID] 命中练度入口', buildCmd.test('#DPS练度查询 胡桃') && buildCmd.test('#DPS练度查询 胡桃 100000000'))
 check('#DPS更新 / #DPS刷新 命中管理入口', adminCmd.test('#DPS更新') && adminCmd.test('#DPS刷新'))
 check('#DPS状态 与 #DPS帮助 各归各家', statusCmd.test('#DPS状态') && helpCmd.test('#DPS帮助'))
 
@@ -55,12 +56,12 @@ check('#DPS状态 与 #DPS帮助 各归各家', statusCmd.test('#DPS状态') && 
 check('#DPS帮助 不被榜单入口匹配', !rankCmd.test('#DPS帮助'))
 check('#DPS状态 不被榜单入口匹配', !rankCmd.test('#DPS状态'))
 check('#DPS更新 不被榜单入口匹配', !rankCmd.test('#DPS更新'))
-check('#DPS练度 <UID> 不被榜单入口匹配', !rankCmd.test('#DPS练度 100000000'))
-check('#DPS练度 <角色> 不被危战入口匹配', !raidCmd.test('#DPS练度 胡桃'))
+check('#DPS练度查询 <UID> 不被榜单入口匹配', !rankCmd.test('#DPS练度查询 100000000'))
+check('#DPS练度查询 <角色> 不被危战入口匹配', !raidCmd.test('#DPS练度查询 胡桃'))
 check('#DPS危战榜 7.1 不被榜单入口匹配', !rankCmd.test('#DPS危战榜 7.1'))
 
 // ---- 大小写与小写前缀 ----
 check('小写 #dps视频 2 也认', rankVideo.test('#dps视频 2'))
-check('省略前缀 dps 仍认榜单', rankCmd.test('dps榜 3金'))
+check('省略 # 但保留前缀仍认榜单', rankCmd.test('dps榜 3金'))
 
 finish()
