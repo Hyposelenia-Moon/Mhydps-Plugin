@@ -28,17 +28,6 @@ avatarEnabled: ${mhydps_avatarEnabled}
 # 默认 UID：命令里不写 UID 时用它（如「#DPS练度查询 胡桃」）
 defaultUid: "${mhydps_defaultUid}"
 
-# 面板立绘图库根目录（含 normal-character 那一层），留空 = 自动探测
-# 自动探测顺序：plugins/ProfileImg-Plugin/resources/gallery/ProfileImg/miao-plugin-ProfileImg
-#              → plugins/miao-plugin/resources/profile
-profileImgDir: "${mhydps_profileImgDir}"
-
-# miao-plugin 目录（练度面板完全复用它的模板与静态表），留空 = 自动探测 plugins/miao-plugin
-miaoPluginDir: "${mhydps_miaoPluginDir}"
-
-# miao-plugin 的 resources 目录（同上，用于反推插件位置），留空 = 自动探测
-miaoResDir: "${mhydps_miaoResDir}"
-
 # ---------- 数据源二 · akasha.cv 参数 ----------
 # 启用练度查询（数据来自 akasha.cv，mhydps.cn 没有练度排名）
 akashaEnabled: ${mhydps_akashaEnabled}

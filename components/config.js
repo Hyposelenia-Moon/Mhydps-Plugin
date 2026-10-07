@@ -27,9 +27,6 @@ const defaultConfig = {
   timeoutMs: 30000,
   avatarEnabled: true,
   defaultUid: '',
-  profileImgDir: '',
-  miaoResDir: '',
-  miaoPluginDir: '',
   // ---- 数据源二：akasha.cv（练度查询） ----
   akashaEnabled: true,
   akashaProxy: '',

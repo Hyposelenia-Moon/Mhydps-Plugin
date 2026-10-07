@@ -89,6 +89,7 @@ export function readAkashaChar (raw = {}, translations = {}) {
     short: String(one?.short || '').toUpperCase(),
     name: String(one?.name || ''),
     result: Number(one?.result) || 0,
+    damageText: bigNumText(one?.result),
     ranking: int(one?.ranking),
     outOf: int(one?.outOf),
     topText: topPercentText(one?.ranking, one?.outOf),

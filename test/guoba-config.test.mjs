@@ -73,9 +73,6 @@ const submitted = {
   pageSize: 20,
   avatarEnabled: false,
   defaultUid: '100000000',
-  profileImgDir: 'D:/img/miao-plugin-ProfileImg',
-  miaoPluginDir: 'D:/bot/plugins/miao-plugin',
-  miaoResDir: 'D:/bot/plugins/miao-plugin/resources',
   akashaEnabled: false,
   akashaProxy: 'http://proxy.example:1080',
   akashaTimeoutMs: 45000,
@@ -107,11 +104,6 @@ check('akasha 五项也已写入', written.akashaEnabled === false &&
   written.akashaTimeoutMs === 45000 &&
   written.akashaCacheTtlMinutes === 90 &&
   written.akashaMaxChars === 20, JSON.stringify(written))
-
-check('练度查询四项也已写入', written.defaultUid === '100000000' &&
-  written.profileImgDir === 'D:/img/miao-plugin-ProfileImg' &&
-  written.miaoPluginDir === 'D:/bot/plugins/miao-plugin' &&
-  written.miaoResDir === 'D:/bot/plugins/miao-plugin/resources', JSON.stringify(written))
 
 const roundTrip = configInfo.getConfigData()
 check('读回与提交一致', fields.every(f => JSON.stringify(roundTrip[f]) === JSON.stringify(submitted[f])), JSON.stringify(roundTrip))

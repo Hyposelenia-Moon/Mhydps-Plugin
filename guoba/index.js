@@ -5,7 +5,7 @@
  *   mhydps_priority, mhydps_renderScale,
  *   mhydps_proxy, mhydps_timeoutMs,
  *   mhydps_cacheTtlMinutes, mhydps_pageSize, mhydps_avatarEnabled,
- *   mhydps_defaultUid, mhydps_profileImgDir, mhydps_miaoPluginDir, mhydps_miaoResDir,
+ *   mhydps_defaultUid,
  *   mhydps_akashaEnabled, mhydps_akashaProxy, mhydps_akashaTimeoutMs, mhydps_akashaCacheTtlMinutes, mhydps_akashaMaxChars
  */
 import fs from 'node:fs'
@@ -37,9 +37,6 @@ const TEMPLATE_VARS = {
   pageSize: 'mhydps_pageSize',
   avatarEnabled: 'mhydps_avatarEnabled',
   defaultUid: 'mhydps_defaultUid',
-  profileImgDir: 'mhydps_profileImgDir',
-  miaoPluginDir: 'mhydps_miaoPluginDir',
-  miaoResDir: 'mhydps_miaoResDir',
   akashaEnabled: 'mhydps_akashaEnabled',
   akashaProxy: 'mhydps_akashaProxy',
   akashaTimeoutMs: 'mhydps_akashaTimeoutMs',
@@ -57,9 +54,6 @@ const DEFAULTS = {
   mhydps_pageSize: '10',
   mhydps_avatarEnabled: 'true',
   mhydps_defaultUid: '',
-  mhydps_profileImgDir: '',
-  mhydps_miaoPluginDir: '',
-  mhydps_miaoResDir: '',
   mhydps_akashaEnabled: 'true',
   mhydps_akashaProxy: '',
   mhydps_akashaTimeoutMs: '60000',
@@ -231,34 +225,6 @@ export function supportGuoba () {
           componentProps: { min: 1, max: 30, defaultValue: 12 }
         },
 
-        { label: '（备用）miao 面板素材', component: 'SOFT_GROUP_BEGIN' },
-        {
-          field: 'profileImgDir',
-          label: '面板立绘图库目录',
-          helpMessage: '含 normal-character 的那一层目录，留空 = 自动探测',
-          bottomHelpMessage: '自动探测 plugins/ProfileImg-Plugin/.../miao-plugin-ProfileImg → plugins/miao-plugin/resources/profile。图库需自行安装（AxiuCN/miao-plugin-ProfileImg），插件不随包分发图片',
-          component: 'Input',
-          required: false,
-          componentProps: { placeholder: '留空 = 自动探测' }
-        },
-        {
-          field: 'miaoPluginDir',
-          label: 'miao-plugin 目录',
-          helpMessage: '练度面板完全复用 miao-plugin 的模板与静态表，这里指定它的目录',
-          bottomHelpMessage: '留空自动探测 plugins/miao-plugin。未安装时练度查询回退纯文本输出（面板图需要它）',
-          component: 'Input',
-          required: false,
-          componentProps: { placeholder: '留空 = 自动探测' }
-        },
-        {
-          field: 'miaoResDir',
-          label: 'miao-plugin 资源目录（可选）',
-          helpMessage: '同上，用于反推 miao-plugin 位置',
-          bottomHelpMessage: '一般不用填；填了 miaoPluginDir 或按默认路径装好插件即可',
-          component: 'Input',
-          required: false,
-          componentProps: { placeholder: '留空 = 自动探测' }
-        }
       ],
 
       getConfigData () {
@@ -272,9 +238,6 @@ export function supportGuoba () {
           pageSize: cfg.pageSize ?? 10,
           avatarEnabled: cfg.avatarEnabled ?? true,
           defaultUid: cfg.defaultUid ?? '',
-          profileImgDir: cfg.profileImgDir ?? '',
-          miaoPluginDir: cfg.miaoPluginDir ?? '',
-          miaoResDir: cfg.miaoResDir ?? '',
           akashaEnabled: cfg.akashaEnabled ?? true,
           akashaProxy: cfg.akashaProxy ?? '',
           akashaTimeoutMs: cfg.akashaTimeoutMs ?? 60000,

@@ -36,8 +36,6 @@ export const API_PATH = {
   teams2: '/api/teams2'
 }
 
-/** Enka 练度代理路径 */
-export const enkaPath = (uid) => `/api/enka/uid/${uid}`
 
 /** 角色立绘路径（站点自托管，用于渲染角色头像） */
 export const avatarUrl = (characterId) => `${SITE_ORIGIN}/charactor/${characterId}.webp`
@@ -58,14 +56,6 @@ export const AVATAR_DIR = 'avatar'
 
 /** 榜单每页上限（配置里的 pageSize 不得超过它） */
 export const MAX_PAGE_SIZE = 20
-
-/**
- * 单次查询最多考虑的角色数
- *
- * 练度面板一张图只呈现一个角色（miao 面板的原样），这里的上限用于「该号还有哪些公开角色」
- * 的提示与文本回退的长度控制。
- */
-export const MAX_BUILD_CHARS = 6
 
 /** 元素英文 → 中文（与站点角色表 element 字段对应） */
 export const ELEMENT_CN = {

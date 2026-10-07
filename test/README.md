@@ -32,10 +32,9 @@ pnpm install            # 在插件目录执行；或把插件放进 bot 的 plu
 ## 数据来源
 
 - 榜单类套件用 `test/fixtures/teams.sample.json`、`teams2.sample.json`（站点 `/api/teams`、`/api/teams2` 的字段结构，值已改写）。
-- 练度类套件用 `test/fixtures/enka.sample.json`（Enka 结构的最小样例）。
+- 练度类套件（akasha）用脱敏后的真实响应：`test/fixtures/akasha.account.sample.json`、`akasha.calc.sample.json`（昵称/签名已替换）。
 - 立绘图库类套件不读真实安装：用 `MHYDPS_PROFILE_IMG` 指向 `test/.test-tmp/` 里自建的假图库。
 - akasha 类套件全程离线：用 `setTransport()` 注入假取数，fixtures 是脱敏后的真实响应（`akasha.account.sample.json` / `akasha.calc.sample.json`）。
-- `miao-bridge` 需要本机装了 miao-plugin（工作区里可用 `MHYDPS_MIAO_PLUGIN` 指向它）；没装就跳过。
 - **套件不发真实请求**：真实接口的正确性只能靠人工验证（`#DPS更新` + 三条查询命令）。
 
 ## 约定
@@ -67,18 +66,15 @@ test/
 | `rank-filter` | DPS 榜角色（含别名）/主C/金数/标签/绿玩筛选与排序、名次编号 |
 | `raid-filter` | 危战榜版本/首领/角色/金数筛选与站点默认排序口径 |
 | `team-store` | 记录归一、缓存磁盘往返、TTL 过期判定、损坏缓存不抛错 |
-| `build-view` | Enka 换算：圣遗物等级 1 基、武器精炼 0 基、面板百分比 ×100 |
-| `enka-client` | 练度接口地址拼装（相对路径 → 站点全地址）与连接失败的错误分支 |
 | `text-fallback` | 渲染失败时的文字版必须含名次/伤害/金数/角色/数据时间 |
 | `config-limits` | 配置越界值夹取（缩放、分页、超时、TTL）与代理修剪 |
 | `startup-lifecycle` | 启动只读磁盘缓存、损坏缓存不阻断插件加载 |
 | `help-config` | 帮助配置结构契约（字段齐全、标题以 # 开头、主人分组） |
 | `guoba-config` | 配置三层同构：模板占位符 ↔ 面板字段 ↔ 默认配置 + 真实往返 |
-| `render-templates` | 4 个自绘模板真实渲染出图，且模板内资源/头像相对路径能解析到文件（练度面板由 miao-plugin 渲染，不在此列） |
+| `render-templates` | 5 个模板真实渲染出图，且模板内资源/头像相对路径能解析到文件 |
 | `command-routing` | 各入口正则的匹配边界（谁的词归谁，`#DPS练度查询 胡桃` 不被榜单/视频抢走） |
 | `video-lookup` | 名次取词、按名次取视频、越界与空结果的兜底文案 |
 | `contrast` | 深色主题令牌的 WCAG AA 现算 + 最小字号 + 「直接压在插画上的容器必须自带暗底」 |
 | `profile-img` | 面板立绘图库：目录探测、按角色名匹配、稳定选图、缺失降级 |
 | `akasha-client` | akasha 接口层：端点拼装、取数注入、错误映射（403 挑战页/404/非 JSON）、缓存往返与失效 |
 | `akasha-query` | akasha 解析：账号画像、名次→top%、赛道、名字中文化、筛选与截断、文本回退 |
-| `miao-bridge` | 复用 miao-plugin 面板代码的桥接：`ival→val` 归一化、按 itemId 解析名字、伤害计算传空（缺 miao 时跳过） |

@@ -110,47 +110,6 @@ export function raidText (result, title = '#DPS危战榜') {
   return lines.join('\n')
 }
 
-/**
- * 练度查询文本版
- * @param {object} result - queryBuild 返回值
- * @param {string} [title]
- * @returns {string}
- */
-export function buildText (result, title = '#DPS练度查询') {
-  const p = result.player
-  const lines = [
-    `${title}｜${p.nickname}（UID ${p.uid}）`,
-    `等级 ${p.level}　世界等级 ${p.worldLevel}　公开角色 ${result.total}${result.truncated ? `（仅展示前 ${result.chars.length} 个）` : ''}`,
-    ''
-  ]
-  if (result.filtered) {
-    lines.splice(1, 0, `筛选：命中 ${result.chars.length} 个角色`)
-  }
-  if (result.unknown?.length) lines.splice(1, 0, `未识别的参数：${result.unknown.join('、')}`)
-  for (const c of result.chars) {
-    lines.push(`【${c.name}】Lv.${c.level}　${c.elementCn}　${c.constellation}命　天赋 ${c.talentText || '-'}`)
-    if (c.weapon) lines.push(`　武器：${c.weapon.name} Lv.${c.weapon.level} 精${c.weapon.refine}`)
-    lines.push(`　面板：${c.stats.map(s => `${s.label} ${s.value}`).join('　')}`)
-    if (c.artifacts.length) {
-      lines.push(`　圣遗物（${c.artifacts.reduce((n, a) => n + a.substatCount, 0)} 条副词条）：`)
-      for (const a of c.artifacts) {
-        lines.push(`　　${a.slot} ${a.name} +${a.level}　${a.mainLabel} ${a.mainValue}`)
-        if (a.substats.length) {
-          lines.push(`　　　${a.substats.map(s => `${s.label} ${s.value}`).join('，')}`)
-        }
-      }
-    }
-    lines.push('')
-  }
-  if (!result.chars.length) {
-    lines.push(result.filtered
-      ? `该 UID 的公开角色里没有：${(result.unknown || []).join('、') || '指定角色'}（公开角色共 ${result.roster?.length || 0} 个）`
-      : '该 UID 未公开角色详情（游戏内「角色详情」需设为公开）')
-  }
-  lines.push(`数据：Enka Network（经 ${SITE_NAME} 代理）`)
-  return lines.join('\n')
-}
-
 /** 版权行（状态页/帮助页文本回退用） */
 export const copyrightLine = COPYRIGHT
 

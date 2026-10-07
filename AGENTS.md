@@ -44,12 +44,10 @@ Mhydps-Plugin/
 | `model/MhydpsClient.js` | model | 发 HTTP：拼 Referer、可走代理、带超时 |
 | `model/TeamStore.js` | model | 拉 `/api/teams`、`/api/teams2`，落盘 `data/` + 内存缓存 + TTL |
 | `model/CharacterIndex.js` | model | 读随包角色表/首领表，提供角色与首领检索 |
-| `model/EnkaClient.js` | model | 调站点 Enka 代理取练度数据、翻译错误 |
 | `model/AvatarStore.js` | model | 立绘下载与缓存 |
 | `model/startup.js` | model | 启动编排（只载入磁盘缓存，不发网络） |
 | `modules/queryArgs.js` | modules | 命令参数解析（显式键值 + 位置简写） |
 | `modules/rankQuery.js` / `raidQuery.js` | modules | 榜单筛选、排序、分页、组装视图行 |
-| `modules/buildQuery.js` | modules | Enka 原始数据 → 面板/武器/圣遗物视图 |
 | `modules/teamView.js` | modules | 榜单行共用视图（成员头像/命座、金数、标签） |
 | `modules/formatText.js` | modules | 渲染失败时的纯文本回退 |
 | `modules/respond.js` | modules | 出图 + 失败回退的统一回复 |
@@ -90,7 +88,6 @@ config/config.yaml.example  ← 参考默认值（入库，首次启动自动复
 - 模板在 `resources/dps/*.html`，art-template 语法；`{{_res_path}}` / `{{_data_path}}` / `{{renderScale}}` / `{{copyright}}` 由 `components/render.js` 注入。
 - 模板内不写 `<script>`；字体随包分发（见下一条），不引用站外字体。
 - **配色只写在 `resources/common/base.css` 的 `:root` 变量块**（当前为深色插画一套）：`components.css` 与 5 个模板一律 `var(--x)`，不得写死色值；这条由 `render-templates` 套件守门（模板里出现 hex/rgba 或遗留旧令牌都会红）。
-  - **唯一例外**：`resources/profile/panel.css`（练度面板）按需求逐条照抄 miao-plugin `profile-detail` 的固定色值，套件对它单独豁免；不要把它的色值搬进共享组件，也不要拿它的写法去改其它页面。
 - **字体也只写在 `base.css`**：`@font-face` 声明原神字体（`resources/common/font/HYWH-65W.woff` 中文 + `tttgbnumber` 数字，随包分发、不联网下载），字体栈把数字字体排在最前；模板不得出现 `font-family`（套件会检查）。换字体 = 换文件 + 改这段声明。
 - 榜单行版式对齐站点：名次徽章 → 4 个描金圆环头像（右上角圆形命座数字，仅数字不带 C）→ 大号伤害数字（34px）→ 金数（27px）→ 标签（18px）。**行尾不放视频列**，视频链接走 `#DPS榜视频 <名次>`。
 - 帮助图内容来自 `resources/help/help-cfg.js`，版式是「整页插画底 + 深色内容条（副标题行 / 分组标题条 / 三列指令网格）」，每项只有 `title` / `desc` 两个字段——**不要加回语法块 / 参数表 / 示例块**（`help-config` 套件会因条目出现多余字段而报红）。参数写法请直接落成可照抄的命令条目（如 `#DPS榜 金≤12`）。
@@ -110,18 +107,6 @@ config/config.yaml.example  ← 参考默认值（入库，首次启动自动复
   - 名字本地化：角色名走本插件角色表（akasha 给英文名），武器/套装名走 akasha 的 textmap。
   - 缓存：`data/akasha/<uid>.json`，TTL 默认 30 分钟；接口非官方、随时可能变，失败必须降级而不是崩。
 - 锅巴表单按这两个数据源分组（外加「基础设置」与「（备用）miao 面板素材」），改配置键时保持分组语义。
-
-### 练度面板（`#DPS练度查询`）
-
-- **练度面板整页复用 miao-plugin（AxiuCN 版）的代码，本插件不自绘**：`apps/build.js` 取数（站点 Enka 代理）→ `model/MiaoBridge.js` 用 miao 的 `EnkaData` / `Avatar` / `Attr` / `ArtisMark` 建面板模型 → 调 miao 的 `Common.render('character/profile-detail', ...)` 出图（模板、样式、图标、布局、缩放全是 miao 的）。
-- **不要在本插件里重新实现面板**：模板/样式/评分/词条权重都不要抄一份（抄了就会像 v1 那样在「站点缺 `flat.name`、天赋缺位次」时出错）。要改观感请改 miao-plugin 或给它提 issue；本插件只决定「喂什么数据」与「用哪张立绘」。
-- 关键收益：名字与图标由 miao 按 **itemId** 反查它的静态表，站点 Enka 数据缺 `flat.name`（新角色/新武器常见）也能正常显示；面板数值与圣遗物评分也由 miao 现算。
-- **不渲染「伤害计算」表**：`toPanelData` 固定传 `dmgCalc.dmgData = []`，靠 miao 模板里的 `{{if dmgData?.length > 0}}` 跳过；不要为了让表出现去接 miao 的 `ProfileDmg`/`calcDmg`。由 `miao-bridge` 套件守门。
-- 立绘走 `model/ProfileImg.js`：只读引用本机 ProfileImg 图库（**不入库**，300MB+ 且禁止商用），按角色名匹配、按 `avatarId` 稳定取图；没有图库或没收录该角色时传空串，miao 会退回它自己的官方立绘。
-- 桥接的硬约束：miao 的代码假设 **cwd = bot 根**；我们用一个独立 `Player` 实例（uid 加 `mhydps-` 前缀）承载解析结果并**从不调用 `save()`**，避免污染 miao 自己的 PlayerData 缓存与内存实例。
-- miao-plugin 缺失或解析失败 → 回退本插件的纯文本（`buildText`）；纯文本里的天赋等级仍是本站启发式，口径差异写在 README。
-- 面板页**不做对比度守门**（miao 的文字直接压在立绘上），这是明确接受的取舍；`test/contrast.test.mjs` 只扫本插件自己的 4 个页面。
-- `#DPS练度查询` 支持带角色名筛选（`parseBuildArgs` → `pickAvatarsByNames`）：角色名/别名经角色表解析成 `avatarId` 再过滤；**关键词全都不是角色名时不当作筛选**（原样出全部 + 一行「未识别的参数」），命中角色名但该号没有该角色才算筛选落空。面板一张图一个角色，默认出等级最高的那个。
 
 ### 日志与注释
 

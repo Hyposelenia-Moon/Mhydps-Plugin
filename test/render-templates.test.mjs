@@ -150,6 +150,31 @@ if (raid.html) {
   check('raid：已移除行尾视频列', !raid.html.includes('rank-side') && !raid.html.includes('video-mark'))
 }
 
+// ---- build：练度查询（数据源二 akasha，表格视图） ----
+const akashaAccount = loadFixture('akasha.account.sample.json').data.account
+const akashaCalcs = loadFixture('akasha.calc.sample.json').data
+const buildView = buildAkashaView({ uid: '100000000', account: akashaAccount, calculations: akashaCalcs })
+const buildData = {
+  title: '#DPS练度查询',
+  player: buildView.player,
+  chars: buildView.chars,
+  total: buildView.total,
+  notice: '已按 胡桃 筛选（命中 1 个）',
+  source: AKASHA_NAME,
+  copyright: COPYRIGHT
+}
+const build = await renderOnce('build', buildData, 'test-build')
+check('build 出图成功', Boolean(build.img), build.err)
+if (build.html) {
+  checkRefs(build.html, path.dirname(path.join(appRoot, 'temp', 'html', 'Mhydps-Plugin', 'dps', 'build', 'x.html')), 'build', /(?:href|src)="([^"]+)"/g)
+  check('build：渲染了账号与角色', build.html.includes('测试玩家') && build.html.includes('胡桃'))
+  check('build：渲染了名次与伤害', build.html.includes('top 0.79%') && build.html.includes('115.8 万') && build.html.includes('COMBO'))
+  check('build：渲染了武器与套装', build.html.includes('Ballad of the Fjords') && /Hunter\×4|Gladiator/.test(build.html))
+  check('build：标注了数据源与口径', build.html.includes(AKASHA_NAME) && build.html.includes('与本站 DPS 榜不同'))
+  check('build：渲染了筛选提示', build.html.includes('已按 胡桃 筛选'))
+  check('build：不放整页插画底（练度页是表格）', !build.html.includes('page-bg'))
+}
+
 // ---- status ----
 const statusData = {
   siteName: SITE_NAME,
@@ -217,7 +242,7 @@ const varUses = (compCss.match(/var\(--/g) || []).length
 check('组件样式全部走变量着色', varUses >= 40, `${varUses} 处`)
 
 const templateColors = []
-for (const f of ['help.html', 'rank.html', 'raid.html', 'status.html']) {
+for (const f of ['help.html', 'rank.html', 'raid.html', 'status.html', 'build.html']) {
   const text = fs.readFileSync(path.join(pluginRoot, 'resources', 'dps', f), 'utf8')
   const hits = text.match(/#[0-9a-fA-F]{3,8}\b|rgba?\(/g)
   if (hits) templateColors.push(`${f}:${hits.join('/')}`)
@@ -245,13 +270,13 @@ check('字体文件非空（>1KB）', fontUrls.every(u => {
 }))
 
 const fontHardcode = []
-for (const f of ['help.html', 'rank.html', 'raid.html', 'status.html']) {
+for (const f of ['help.html', 'rank.html', 'raid.html', 'status.html', 'build.html']) {
   const text = fs.readFileSync(path.join(pluginRoot, 'resources', 'dps', f), 'utf8')
   if (/font-family/.test(text)) fontHardcode.push(f)
 }
 check('模板不硬编码字体（统一由 base.css 决定）', fontHardcode.length === 0, fontHardcode.join(','))
 
-// ---- 四个自绘页面都铺了整页插画底（练度面板整页由 miao-plugin 渲染，不在此列） ----
+// ---- 四个页面铺了整页插画底（练度页是 akasha 表格视图，不放底图） ----
 const renderedPages = { rank, raid, status, help }
 const bgFiles = { rank: 'bg-rank.jpg', raid: 'bg-raid.jpg', status: 'bg-status.jpg', help: 'bg-help.jpg' }
 for (const [name, page] of Object.entries(renderedPages)) {

@@ -9,12 +9,10 @@ import { checker, installFrameworkStubs, mod, requireDeps } from './_helper.mjs'
 installFrameworkStubs()
 requireDeps('yaml')
 
-const { rankText, raidText, buildText } = await import(mod('modules/formatText.js'))
+const { rankText, raidText } = await import(mod('modules/formatText.js'))
 const { normalizeTeams, normalizeTeams2 } = await import(mod('model/TeamStore.js'))
 const { buildRows } = await import(mod('modules/rankQuery.js'))
 const { buildRows: buildRaidRows } = await import(mod('modules/raidQuery.js'))
-const { buildCharView } = await import(mod('modules/buildQuery.js'))
-const { readPlayer } = await import(mod('model/EnkaClient.js'))
 
 const { check, finish } = checker()
 
@@ -92,38 +90,5 @@ const rd = raidText(raidResult)
 check('危战文本含耗时与版本首领', rd.includes('24s') && rd.includes('7.1') && rd.includes('矮灵雕刻师'))
 check('危战文本含绿玩标签', rd.includes('绿玩'))
 check('危战文本含标题', rd.includes('#DPS危战榜'))
-
-const sample = {
-  uid: '100000000',
-  region: 'CN',
-  playerInfo: { nickname: '测试玩家', level: 60, worldLevel: 9 },
-  avatarInfoList: [{
-    avatarId: 10000046,
-    propMap: { 4001: { ival: 90 } },
-    talentIdList: [461],
-    skillLevelMap: { 12201: 10, 12202: 9, 12203: 8 },
-    fightPropMap: { 2000: 33139, 20: 0.542, 22: 1.884, 23: 1.32, 2001: 1200, 2002: 800, 28: 374 },
-    equipList: [
-      { flat: { itemType: 'ITEM_WEAPON', name: '护摩之杖', rankLevel: 5 }, weapon: { level: 90, affixMap: { x: 0 } } }
-    ]
-  }]
-}
-
-const buildResult = {
-  ok: true,
-  player: readPlayer(sample),
-  chars: sample.avatarInfoList.map(buildCharView),
-  total: 1,
-  truncated: false
-}
-
-const bd = buildText(buildResult)
-check('练度文本含玩家与 UID', bd.includes('测试玩家') && bd.includes('100000000'))
-check('练度文本含角色面板', bd.includes('【胡桃】') && bd.includes('Lv.90') && bd.includes('54.2%'))
-check('练度文本含武器', bd.includes('护摩之杖') && bd.includes('精1'))
-check('练度文本含数据来源', bd.includes('Enka'))
-
-const emptyBuild = buildText({ ...buildResult, chars: [], total: 0 })
-check('未公开角色时有提示', emptyBuild.includes('未公开角色详情'))
 
 finish()

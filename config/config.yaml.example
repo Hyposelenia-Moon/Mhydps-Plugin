@@ -29,7 +29,6 @@ avatarEnabled: true
 # 默认 UID：命令里不写 UID 时用它（例：直接发「#DPS练度查询 胡桃」）
 defaultUid: ''
 
-
 # ---------- 数据源二 · akasha.cv（练度查询） ----------
 # 启用练度查询：练度数据来自 akasha.cv（mhydps.cn 只有匿名配队榜，没有练度排名）
 # 实测 akasha 的 /api/ 在 Cloudflare 后面，纯 HTTP 取数会被挡（403 挑战页），
@@ -48,8 +47,3 @@ akashaCacheTtlMinutes: 30
 # 一次练度查询最多列几个角色（1 ~ 30）
 akashaMaxChars: 12
 
-# ---------- （备用）miao 面板素材 ----------
-# 这三项只服务「用 miao-plugin 渲染面板」的备用路径（练度查询已改用 akasha，不再走它）
-profileImgDir: ''
-miaoPluginDir: ''
-miaoResDir: ''

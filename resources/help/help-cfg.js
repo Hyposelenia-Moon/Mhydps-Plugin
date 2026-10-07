@@ -42,8 +42,8 @@ export const helpList = [
   {
     group: '练度查询',
     list: [
-      { title: '#DPS练度查询 <UID>', desc: 'miao 面板样式的角色面板 + 圣遗物明细（Enka 数据）' },
-      { title: '#DPS练度查询 <角色>', desc: '只看指定角色，支持别名（如 桃）；UID 取配置默认值' },
+      { title: '#DPS练度查询 <UID>', desc: 'akasha 练度：名次 / top% / 伤害 / 武器 / 套装' },
+      { title: '#DPS练度查询 <角色>', desc: '只看指定角色（如 胡桃 / 桃）；UID 取配置默认值' },
       { title: '#DPS练度查询 <角色> <UID>', desc: '角色与 UID 顺序随意、可写多个角色' },
       { title: '#练度查询 <UID>', desc: '简写，可省略 DPS 前缀' }
     ]
